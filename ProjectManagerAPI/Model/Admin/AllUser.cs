@@ -1,6 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 
-namespace ProjectManagerAPI.Model.User
+namespace ProjectManagerAPI.Model.Admin
 {
     public class AllUser
     {

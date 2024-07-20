@@ -1,5 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using ProjectManagementAPI.Model.Security;
+using ProjectManagerAPI.Model.Admin;
 using ProjectManagerAPI.Model.ProjectModel;
 using ProjectManagerAPI.Model.User;
 
@@ -11,6 +12,7 @@ namespace ProjectManagerAPI.Context
         public DbSet<LogInResponse> LogInResponse { get; set; }
         public DbSet<Projects> Projects { get; set; }
         public DbSet<AllUser> AllUser { get; set; }
+        public DbSet<Team> Team { get; set; }
         public ApplicationDBContext(DbContextOptions<ApplicationDBContext> options) : base(options)
         {
         }
