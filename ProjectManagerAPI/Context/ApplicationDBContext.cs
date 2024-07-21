@@ -2,6 +2,7 @@
 using ProjectManagementAPI.Model.Security;
 using ProjectManagerAPI.Model.Admin;
 using ProjectManagerAPI.Model.ProjectModel;
+using ProjectManagerAPI.Model.Task;
 using ProjectManagerAPI.Model.User;
 
 namespace ProjectManagerAPI.Context
@@ -14,6 +15,7 @@ namespace ProjectManagerAPI.Context
         public DbSet<AllUser> AllUser { get; set; }
         public DbSet<Team> Team { get; set; }
         public DbSet<UserPerProject> UserPerProject { get; set; }
+        public DbSet<ProjectPerUser> ProjectPerUser { get; set; }
         public ApplicationDBContext(DbContextOptions<ApplicationDBContext> options) : base(options)
         {
         }
