@@ -13,6 +13,7 @@ namespace ProjectManagerAPI.Context
         public DbSet<Projects> Projects { get; set; }
         public DbSet<AllUser> AllUser { get; set; }
         public DbSet<Team> Team { get; set; }
+        public DbSet<UserPerProject> UserPerProject { get; set; }
         public ApplicationDBContext(DbContextOptions<ApplicationDBContext> options) : base(options)
         {
         }

@@ -112,5 +112,59 @@ namespace ProjectManagerAPI.Controllers.Project
                 return StatusCode(500, $"Database connection failed: {ex.Message}");
             }
         }
+        [HttpGet]
+        [Route("UserPerProject")]
+        [AllowAnonymous]
+        public async Task<List<UserPerProject>> UserPerProject(int TeamID, int ProjectID)
+        {
+            try
+            {
+                var commandText = $"EXEC sprGetUserPerProject {TeamID},{ProjectID}";
+                var result = _dbContext.UserPerProject.FromSqlRaw(commandText).ToList();
+
+                return result;
+            }
+            catch (Exception ex)
+            {
+                // Handle other exceptions
+                return null;
+            }
+        }
+        [HttpGet]
+        [Route("ProjectAssign")]
+        [AllowAnonymous]
+        public async Task<IActionResult> ProjectAssign(int User, int Project, bool Active, int Enroll)
+        {
+            try
+            {
+                // Define an output parameter to capture the message
+                var msgParameter = new SqlParameter("@Msg", SqlDbType.VarChar, -1)
+                {
+                    Direction = ParameterDirection.Output
+                };
+
+                // Call the stored procedure asynchronously
+                await _dbContext.Database.ExecuteSqlRawAsync(
+                    "EXEC sprAssignUser @User, @Project, @Active, @Enroll, @Msg OUT",
+                    new SqlParameter("@User", User),
+                    new SqlParameter("@Project", Project),
+                    new SqlParameter("@Active", Active),
+                    new SqlParameter("@Enroll", Enroll),
+                    msgParameter
+                );
+
+                var message = msgParameter.Value?.ToString();
+
+                return new JsonResult(message);
+            }
+            catch (DbUpdateException dbEx)
+            {
+                return StatusCode(503, "Database temporarily unavailable.");
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Database connection failed: {ex.Message}");
+            }
+        }
     }
 }
