@@ -11,5 +11,6 @@ namespace ProjectManagerAPI.Model.Task
         public string strRequestFrom { get; set; }
         public TimeSpan tmWorking { get; set; }
         public string Agging { get; set; }
+        public string strProjectName { get; set; }
     }
 }

@@ -62,7 +62,7 @@ namespace ProjectManagerAPI.Controllers.Admin
         [HttpGet]
         [Route("UpdateUser")]
         [AllowAnonymous]
-        public async Task<IActionResult> UpdateUser(int User, string Name, string Phone, string Email, int Team, bool Active, bool isboss, int Enroll)
+        public async Task<IActionResult> UpdateUser(int User, string Name, string Phone, string Email, int Team, bool Active, bool isboss, int Enroll, bool Locked)
         {
             try
             {
@@ -74,7 +74,7 @@ namespace ProjectManagerAPI.Controllers.Admin
 
                 // Call the stored procedure asynchronously
                 await _dbContext.Database.ExecuteSqlRawAsync(
-                    "EXEC sprUpdateUser @User, @Name, @Phone, @Email, @TeamiID, @isActive, @isBoss, @Enroll,  @Msg OUT",
+                    "EXEC sprUpdateUser @User, @Name, @Phone, @Email, @TeamiID, @isActive, @isBoss, @Enroll, @Locked,  @Msg OUT",
                     new SqlParameter("@User", User),
                     new SqlParameter("@Name", Name),
                     new SqlParameter("@Phone", Phone),
@@ -82,6 +82,7 @@ namespace ProjectManagerAPI.Controllers.Admin
                     new SqlParameter("@TeamiID", Team),
                     new SqlParameter("@isActive", Active),
                     new SqlParameter("@isBoss", isboss),
+                    new SqlParameter("@Locked", Locked),
                     new SqlParameter("@Enroll", Enroll),
                     msgParameter
                 );

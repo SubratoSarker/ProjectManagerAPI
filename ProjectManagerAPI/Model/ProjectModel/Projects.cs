@@ -8,7 +8,7 @@ namespace ProjectManagerAPI.Model.ProjectModel
         public int IntProjectID { get; set; }
         public string StrProjectName { get; set; }
         public bool IsCompleate { get; set; }
-        public int DaysPassed { get; set; }
+        public string DaysPassed { get; set; }
         public int UserCount { get; set; }
     }
 }
