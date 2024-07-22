@@ -80,5 +80,140 @@ namespace ProjectManagerAPI.Controllers.Task
                 return StatusCode(500, $"Database connection failed: {ex.Message}");
             }
         }
+        [HttpGet]
+        [Route("GetTasks")]
+        [AllowAnonymous]
+        public async Task<List<Tasks>> GetTasks(int Enroll, int Status)
+        {
+            try
+            {
+                var commandText = $"EXEC sprGetTaskByUser {Enroll},{Status}";
+                var result = _dbContext.Tasks.FromSqlRaw(commandText).ToList();
+
+                return result;
+            }
+            catch (Exception ex)
+            {
+                // Handle other exceptions
+                return null;
+            }
+        }
+        [HttpGet]
+        [Route("GetCurrentTasks")]
+        [AllowAnonymous]
+        public async Task<Tasks> GetCurrentTasks(int Enroll)
+        {
+            try
+            {
+                var commandText = $"EXEC sprGetTaskByUser {Enroll},{1}";
+                var result = _dbContext.Tasks.FromSqlRaw(commandText).ToList().FirstOrDefault();
+
+                return result;
+            }
+            catch (Exception ex)
+            {
+                // Handle other exceptions
+                return null;
+            }
+        }
+        [HttpGet]
+        [Route("GetStepsByTask")]
+        [AllowAnonymous]
+        public async Task<List<Steps>> GetStepsByTask(int Task)
+        {
+            try
+            {
+                var commandText = $"EXEC sprGetStepByTask {Task}";
+                var result = _dbContext.Steps.FromSqlRaw(commandText).ToList();
+
+                return result;
+            }
+            catch (Exception ex)
+            {
+                // Handle other exceptions
+                return null;
+            }
+        }
+        [HttpGet]
+        [Route("StepManage")]
+        [AllowAnonymous]
+        public async Task<IActionResult> StepManage(int Type, string Name, bool IsDone, int StepID, int Enroll)
+        {
+            try
+            {
+                // Define an output parameter to capture the message
+                var msgParameter = new SqlParameter("@Msg", SqlDbType.VarChar, -1)
+                {
+                    Direction = ParameterDirection.Output
+                };
+
+                // Call the stored procedure asynchronously
+                await _dbContext.Database.ExecuteSqlRawAsync(
+                    "EXEC sprUpdateStep @type, @Step, @isDone, @StepID, @Enroll, @Msg OUT",
+                    new SqlParameter("@type", Type),
+                    new SqlParameter("@Step", Name),
+                    new SqlParameter("@isDone", IsDone),
+                    new SqlParameter("@StepID", StepID),
+                    new SqlParameter("@Enroll", Enroll),
+                    msgParameter
+                );
+
+                // Retrieve the output parameter value
+                var message = msgParameter.Value?.ToString();
+
+                return new JsonResult(message);
+            }
+            catch (DbUpdateException dbEx)
+            {
+                // Handle specific database update exception
+                return StatusCode(503, "Database temporarily unavailable.");
+            }
+            catch (Exception ex)
+            {
+                // Handle other exceptions
+                return StatusCode(500, $"Database connection failed: {ex.Message}");
+            }
+        }
+        [HttpGet]
+        [Route("TaskManage")]
+        [AllowAnonymous]
+        public async Task<IActionResult> TaskManage(int Type, int TaskID, int User, int Status, TimeSpan Working, int Enroll)
+        {
+            try
+            {
+                // Define an output parameter to capture the message
+                var msgParameter = new SqlParameter("@Msg", SqlDbType.VarChar, -1)
+                {
+                    Direction = ParameterDirection.Output
+                };
+
+                // Call the stored procedure asynchronously
+                await _dbContext.Database.ExecuteSqlRawAsync(
+                    "EXEC sprtaskManager @Type, @TaskID, @User, @Status, @tmTime, @Enroll, @Msg OUT",
+                    new SqlParameter("@Type", Type),
+                    new SqlParameter("@TaskID", TaskID),
+                    new SqlParameter("@User", User),
+                    new SqlParameter("@Status", Status),
+                    new SqlParameter("@tmTime", Working),
+                    new SqlParameter("@Enroll", Enroll),
+                    msgParameter
+                );
+
+                // Retrieve the output parameter value
+                var message = msgParameter.Value?.ToString();
+
+                return new JsonResult(message);
+            }
+            catch (DbUpdateException dbEx)
+            {
+                // Handle specific database update exception
+                return StatusCode(503, "Database temporarily unavailable.");
+            }
+            catch (Exception ex)
+            {
+                // Handle other exceptions
+                return StatusCode(500, $"Database connection failed: {ex.Message}");
+            }
+        }
     }
 }
