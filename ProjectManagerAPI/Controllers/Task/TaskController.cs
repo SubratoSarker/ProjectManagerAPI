@@ -135,6 +135,24 @@ namespace ProjectManagerAPI.Controllers.Task
             }
         }
         [HttpGet]
+        [Route("TransferCheck")]
+        [AllowAnonymous]
+        public async Task<List<TransferUser>> TransferCheck(int Task, int User)
+        {
+            try
+            {
+                var commandText = $"EXEC sprTransferCheck {Task}, {User}";
+                var result = _dbContext.TransferUser.FromSqlRaw(commandText).ToList();
+
+                return result;
+            }
+            catch (Exception ex)
+            {
+                // Handle other exceptions
+                return null;
+            }
+        }
+        [HttpGet]
         [Route("StepManage")]
         [AllowAnonymous]
         public async Task<IActionResult> StepManage(int Type, string Name, bool IsDone, int StepID, int Enroll)
