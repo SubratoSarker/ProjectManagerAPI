@@ -13,6 +13,7 @@ using System.Numerics;
 
 namespace ProjectManagerAPI.Controllers.Admin
 {
+    [Authorize]
     [Route("api/[controller]")]
     [ApiController]
     public class AdminController : ControllerBase
@@ -25,7 +26,6 @@ namespace ProjectManagerAPI.Controllers.Admin
 
         [HttpGet]
         [Route("GetAllUser")]
-        [AllowAnonymous]
         public async Task<List<AllUser>> GetAllUser(int UserID)
         {
             try
@@ -43,7 +43,6 @@ namespace ProjectManagerAPI.Controllers.Admin
         }
         [HttpGet]
         [Route("GetAllTeam")]
-        [AllowAnonymous]
         public async Task<List<Team>> GetAllTeam()
         {
             try
@@ -61,7 +60,6 @@ namespace ProjectManagerAPI.Controllers.Admin
         }
         [HttpGet]
         [Route("UpdateUser")]
-        [AllowAnonymous]
         public async Task<IActionResult> UpdateUser(int User, string Name, string Phone, string Email, int Team, bool Active, bool isboss, int Enroll, bool Locked)
         {
             try
@@ -102,7 +100,6 @@ namespace ProjectManagerAPI.Controllers.Admin
         }
         [HttpGet]
         [Route("Create")]
-        [AllowAnonymous]
         public async Task<IActionResult> Create(string Name, int Enroll)
         {
             try

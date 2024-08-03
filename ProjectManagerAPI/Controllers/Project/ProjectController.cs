@@ -24,7 +24,6 @@ namespace ProjectManagerAPI.Controllers.Project
         }
         [HttpGet]
         [Route("Create")]
-        [AllowAnonymous]
         public async Task<IActionResult> Create(string Name, int Enroll)
         {
             try
@@ -61,7 +60,6 @@ namespace ProjectManagerAPI.Controllers.Project
         }
         [HttpGet]
         [Route("GetProjectByTeam")]
-        [AllowAnonymous]
         public async Task<List<Projects>> GetProjectByTeam(int TeamID, int Enroll)
         {
             try
@@ -79,7 +77,6 @@ namespace ProjectManagerAPI.Controllers.Project
         }
         [HttpGet]
         [Route("StausUpdate")]
-        [AllowAnonymous]
         public async Task<IActionResult> StausUpdate(int Type, int Project, int Enroll)
         {
             try
@@ -114,7 +111,6 @@ namespace ProjectManagerAPI.Controllers.Project
         }
         [HttpGet]
         [Route("UserPerProject")]
-        [AllowAnonymous]
         public async Task<List<UserPerProject>> UserPerProject(int TeamID, int ProjectID)
         {
             try
@@ -132,7 +128,6 @@ namespace ProjectManagerAPI.Controllers.Project
         }
         [HttpGet]
         [Route("ProjectAssign")]
-        [AllowAnonymous]
         public async Task<IActionResult> ProjectAssign(int User, int Project, bool Active, int Enroll)
         {
             try

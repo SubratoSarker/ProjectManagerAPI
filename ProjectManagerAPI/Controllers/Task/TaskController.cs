@@ -13,6 +13,7 @@ using System.Numerics;
 
 namespace ProjectManagerAPI.Controllers.Task
 {
+    [Authorize]
     [Route("api/[controller]")]
     [ApiController]
     public class TaskController : ControllerBase
@@ -24,7 +25,6 @@ namespace ProjectManagerAPI.Controllers.Task
         }
         [HttpGet]
         [Route("GetProjectByUser")]
-        [AllowAnonymous]
         public async Task<List<ProjectPerUser>> GetProjectByUser(int Enroll)
         {
             try
@@ -42,7 +42,6 @@ namespace ProjectManagerAPI.Controllers.Task
         }
         [HttpGet]
         [Route("CreateTask")]
-        [AllowAnonymous]
         public async Task<IActionResult> CreateTask(string Name, string Description, string ReqFrom, int Enroll, int Project)
         {
             try
@@ -82,7 +81,6 @@ namespace ProjectManagerAPI.Controllers.Task
         }
         [HttpGet]
         [Route("GetTasks")]
-        [AllowAnonymous]
         public async Task<List<Tasks>> GetTasks(int Enroll, int Status)
         {
             try
@@ -100,7 +98,6 @@ namespace ProjectManagerAPI.Controllers.Task
         }
         [HttpGet]
         [Route("GetCurrentTasks")]
-        [AllowAnonymous]
         public async Task<Tasks> GetCurrentTasks(int Enroll)
         {
             try
@@ -118,7 +115,6 @@ namespace ProjectManagerAPI.Controllers.Task
         }
         [HttpGet]
         [Route("GetStepsByTask")]
-        [AllowAnonymous]
         public async Task<List<Steps>> GetStepsByTask(int Task)
         {
             try
@@ -136,7 +132,6 @@ namespace ProjectManagerAPI.Controllers.Task
         }
         [HttpGet]
         [Route("TransferCheck")]
-        [AllowAnonymous]
         public async Task<List<TransferUser>> TransferCheck(int Task, int User)
         {
             try
@@ -154,7 +149,6 @@ namespace ProjectManagerAPI.Controllers.Task
         }
         [HttpGet]
         [Route("StepManage")]
-        [AllowAnonymous]
         public async Task<IActionResult> StepManage(int Type, string Name, bool IsDone, int StepID, int Enroll)
         {
             try
@@ -194,7 +188,6 @@ namespace ProjectManagerAPI.Controllers.Task
         }
         [HttpGet]
         [Route("TaskManage")]
-        [AllowAnonymous]
         public async Task<IActionResult> TaskManage(int Type, int TaskID, int User, int Status, TimeSpan Working, int Enroll)
         {
             try
