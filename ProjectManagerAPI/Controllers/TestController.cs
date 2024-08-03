@@ -46,5 +46,28 @@ namespace Controllers.Controllers
                 return StatusCode(500, $"Database connection failed: {ex.Message}");
             }
         }
+        [HttpGet]
+        [Route("GetStatus")]
+        [AllowAnonymous]
+        //[Authorize(AuthenticationSchemes = "APIValidationScheme")] // Require authentication
+        public IActionResult GetStatus()
+        {
+            try
+            {
+                return Ok("API Working Properly");
+            }
+            catch (DbUpdateException dbEx)
+            {
+                // Log the exception details for debugging purposes
+                // logger.LogError(dbEx, "Error during database connection");
+                return StatusCode(503, "Database temporarily unavailable.");
+            }
+            catch (Exception ex)
+            {
+                // Log the exception details for debugging purposes
+                // logger.LogError(ex, "Error during database connection");
+                return StatusCode(500, $"Database connection failed: {ex.Message}");
+            }
+        }
     }
 }
