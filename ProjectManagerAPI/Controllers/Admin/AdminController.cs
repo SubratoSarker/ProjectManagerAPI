@@ -13,7 +13,7 @@ using System.Numerics;
 
 namespace ProjectManagerAPI.Controllers.Admin
 {
-    [Authorize]
+    [Authorize(Roles = "Admin")]
     [Route("api/[controller]")]
     [ApiController]
     public class AdminController : ControllerBase

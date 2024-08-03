@@ -35,6 +35,11 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
         IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"]))
     };
 });
+builder.Services.AddAuthorization(options =>
+{
+    options.AddPolicy("Boss", policy =>
+        policy.RequireClaim("Boss", "True")); // Adjust the value as per your requirement
+});
 
 var app = builder.Build();
 
