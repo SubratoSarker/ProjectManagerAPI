@@ -25,11 +25,11 @@ namespace ProjectManagerAPI.Controllers.Task
         }
         [HttpGet]
         [Route("GetProjectByUser")]
-        public async Task<List<ProjectPerUser>> GetProjectByUser(int Enroll)
+        public async Task<List<ProjectPerUser>> GetProjectByUser(int Enroll, int Type)
         {
             try
             {
-                var commandText = $"EXEC sprGetProjectByUser {Enroll}";
+                var commandText = $"EXEC sprGetProjectByUser {Enroll}, {Type}";
                 var result = _dbContext.ProjectPerUser.FromSqlRaw(commandText).ToList();
 
                 return result;
