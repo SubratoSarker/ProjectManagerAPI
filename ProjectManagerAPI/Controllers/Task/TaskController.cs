@@ -226,5 +226,22 @@ namespace ProjectManagerAPI.Controllers.Task
                 return StatusCode(500, $"Database connection failed: {ex.Message}");
             }
         }
+        [HttpGet]
+        [Route("GetPerFormance")]
+        public async Task<List<Performance>> GetPerFormance(DateTime From , DateTime To, int User, int Project)
+        {
+            try
+            {
+                var commandText = $"EXEC PerformanceReprot '{From}','{To}',{User},{Project}";
+                var result = _dbContext.Performance.FromSqlRaw(commandText).ToList();
+
+                return result;
+            }
+            catch (Exception ex)
+            {
+                // Handle other exceptions
+                return null;
+            }
+        }
     }
 }

@@ -31,7 +31,7 @@ namespace ProjectManagerAPI.Controllers.Security
         }
         [HttpGet]
         [Route("SecurityCheck")]
-        //[Authorize(AuthenticationSchemes = "APIValidationScheme")]
+        [Authorize(AuthenticationSchemes = "APIValidationScheme")]
         public IActionResult SecurityCheck(string Name,string Key,int Type, string Code)
         {
             try

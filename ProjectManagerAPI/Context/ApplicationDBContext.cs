@@ -19,6 +19,7 @@ namespace ProjectManagerAPI.Context
         public DbSet<Tasks> Tasks { get; set; }
         public DbSet<Steps> Steps { get; set; }
         public DbSet<TransferUser> TransferUser { get; set; }
+        public DbSet<Performance> Performance { get; set; }
         public ApplicationDBContext(DbContextOptions<ApplicationDBContext> options) : base(options)
         {
         }
