@@ -304,5 +304,22 @@ namespace ProjectManagerAPI.Controllers.Task
                 return null;
             }
         }
+        [HttpGet]
+        [Route("GetNotify")]
+        public async Task<List<Notify>> GetNotify(int Enroll)
+        {
+            try
+            {
+                var commandText = $"EXEC sprGetNotify {Enroll}";
+                var result = _dbContext.Notify.FromSqlRaw(commandText).ToList();
+
+                return result;
+            }
+            catch (Exception ex)
+            {
+                // Handle other exceptions
+                return null;
+            }
+        }
     }
 }
