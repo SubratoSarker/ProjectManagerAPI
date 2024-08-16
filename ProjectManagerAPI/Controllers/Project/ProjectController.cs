@@ -161,5 +161,42 @@ namespace ProjectManagerAPI.Controllers.Project
                 return StatusCode(500, $"Database connection failed: {ex.Message}");
             }
         }
+        [HttpGet]
+        [Route("RequestAction")]
+        public async Task<IActionResult> RequestAction(int RequestID, int Enroll, int Type)
+        {
+            try
+            {
+                // Define an output parameter to capture the message
+                var msgParameter = new SqlParameter("@Msg", SqlDbType.VarChar, -1)
+                {
+                    Direction = ParameterDirection.Output
+                };
+
+                // Call the stored procedure asynchronously
+                await _dbContext.Database.ExecuteSqlRawAsync(
+                    "EXEC sprRequetAction @RequestID, @Enroll, @Type, @Msg OUT",
+                    new SqlParameter("@RequestID", RequestID),
+                    new SqlParameter("@Enroll", Enroll),
+                    new SqlParameter("@Type", Type),
+                    msgParameter
+                );
+
+                // Retrieve the output parameter value
+                var message = msgParameter.Value?.ToString();
+
+                return new JsonResult(message);
+            }
+            catch (DbUpdateException dbEx)
+            {
+                // Handle specific database update exception
+                return StatusCode(503, "Database temporarily unavailable.");
+            }
+            catch (Exception ex)
+            {
+                // Handle other exceptions
+                return StatusCode(500, $"Database connection failed: {ex.Message}");
+            }
+        }
     }
 }
