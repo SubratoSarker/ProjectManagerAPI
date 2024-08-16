@@ -243,5 +243,66 @@ namespace ProjectManagerAPI.Controllers.Task
                 return null;
             }
         }
+        [HttpGet]
+        [Route("Request")]
+        public async Task<IActionResult> Request(string TaskName, string Description, string RequestFrom, int USerID, int Project, DateTime Date, int Status, TimeSpan tm, string From, string To )
+        {
+            try
+            {
+                // Define an output parameter to capture the message
+                var msgParameter = new SqlParameter("@Msg", SqlDbType.VarChar, -1)
+                {
+                    Direction = ParameterDirection.Output
+                };
+
+                // Call the stored procedure asynchronously
+                await _dbContext.Database.ExecuteSqlRawAsync(
+                    "EXEC sprRequestEntry @TaskName, @strDescription, @strRequestFrom, @intUserID, @intProjectID, @dteDate, @intStatusID, @tmWorking, @From, @To, @Msg OUT",
+                    new SqlParameter("@TaskName", TaskName),
+                    new SqlParameter("@strDescription", Description),
+                    new SqlParameter("@strRequestFrom", RequestFrom),
+                    new SqlParameter("@intUserID", USerID),
+                    new SqlParameter("@intProjectID", Project),
+                    new SqlParameter("@dteDate", Date),
+                    new SqlParameter("@intStatusID", Status),
+                    new SqlParameter("@tmWorking", tm),
+                    new SqlParameter("@From", From),
+                    new SqlParameter("@To", To),
+                    msgParameter
+                );
+
+                // Retrieve the output parameter value
+                var message = msgParameter.Value?.ToString();
+
+                return new JsonResult(message);
+            }
+            catch (DbUpdateException dbEx)
+            {
+                // Handle specific database update exception
+                return StatusCode(503, "Database temporarily unavailable.");
+            }
+            catch (Exception ex)
+            {
+                // Handle other exceptions
+                return StatusCode(500, $"Database connection failed: {ex.Message}");
+            }
+        }
+        [HttpGet]
+        [Route("GetRequestList")]
+        public async Task<List<Request>> GetRequestList(int User, Boolean isSuperviser)
+        {
+            try
+            {
+                var commandText = $"EXEC sprGetRequestList {User},{isSuperviser}";
+                var result = _dbContext.Request.FromSqlRaw(commandText).ToList();
+
+                return result;
+            }
+            catch (Exception ex)
+            {
+                // Handle other exceptions
+                return null;
+            }
+        }
     }
 }
