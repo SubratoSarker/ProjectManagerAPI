@@ -321,5 +321,22 @@ namespace ProjectManagerAPI.Controllers.Task
                 return null;
             }
         }
+        [HttpGet]
+        [Route("GetPendingTasks")]
+        public async Task<List<PendingTask>> GetPendingTasks(int Enroll)
+        {
+            try
+            {
+                var commandText = $"EXEC sprPendingReport {Enroll}";
+                var result = _dbContext.PendingTask.FromSqlRaw(commandText).ToList();
+
+                return result;
+            }
+            catch (Exception ex)
+            {
+                // Handle other exceptions
+                return null;
+            }
+        }
     }
 }
