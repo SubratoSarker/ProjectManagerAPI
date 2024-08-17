@@ -22,6 +22,7 @@ namespace ProjectManagerAPI.Context
         public DbSet<Performance> Performance { get; set; }
         public DbSet<Request> Request { get; set; }
         public DbSet<Notify> Notify { get; set; }
+        public DbSet<DateWiseReport> DateWiseReport { get; set; }
         public ApplicationDBContext(DbContextOptions<ApplicationDBContext> options) : base(options)
         {
         }
