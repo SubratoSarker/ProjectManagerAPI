@@ -338,5 +338,22 @@ namespace ProjectManagerAPI.Controllers.Task
                 return null;
             }
         }
+        [HttpGet]
+        [Route("GetTask")]
+        public async Task<Tasks> GetTask(int TaskID)
+        {
+            try
+            {
+                var commandText = $"EXEC GetTask {TaskID}";
+                var result = _dbContext.Tasks.FromSqlRaw(commandText).ToList().FirstOrDefault();
+
+                return result;
+            }
+            catch (Exception ex)
+            {
+                // Handle other exceptions
+                return null;
+            }
+        }
     }
 }
