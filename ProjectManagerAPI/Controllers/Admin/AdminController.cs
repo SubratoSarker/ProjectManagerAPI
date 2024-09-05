@@ -136,13 +136,29 @@ namespace ProjectManagerAPI.Controllers.Admin
         }
         [HttpGet]
         [Route("GetTeamReport")]
-        [AllowAnonymous]
         public async Task<List<DateWiseReport>> GetTeamReport(int Enroll, DateTime From, DateTime To)
         {
             try
             {
                 var commandText = $"EXEC PerformanceReprotTeam {Enroll}, '{From}', '{To}' ";
                 var result = _dbContext.DateWiseReport.FromSqlRaw(commandText).ToList();
+
+                return result;
+            }
+            catch (Exception ex)
+            {
+                // Handle other exceptions
+                return null;
+            }
+        }
+        [HttpGet]
+        [Route("GetCompleatedReport")]
+        public async Task<List<CompleatedReport>> GetCompleatedReport(DateTime From, DateTime To)
+        {
+            try
+            {
+                var commandText = $"EXEC sprGetCompleatedTask  '{From}', '{To}' ";
+                var result = _dbContext.CompleatedReport.FromSqlRaw(commandText).ToList();
 
                 return result;
             }

@@ -24,6 +24,7 @@ namespace ProjectManagerAPI.Context
         public DbSet<Notify> Notify { get; set; }
         public DbSet<DateWiseReport> DateWiseReport { get; set; }
         public DbSet<PendingTask> PendingTask { get; set; }
+        public DbSet<CompleatedReport> CompleatedReport { get; set; }
         public ApplicationDBContext(DbContextOptions<ApplicationDBContext> options) : base(options)
         {
         }
