@@ -10,9 +10,7 @@ using System.Text;
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
-
 builder.Services.AddControllers();
-// Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 builder.Services.AddDbContext<ApplicationDBContext>(options =>
@@ -20,9 +18,13 @@ builder.Services.AddDbContext<ApplicationDBContext>(options =>
 );
 builder.Services.AddScoped<IAPIValidation, APIValidation>();
 builder.Services.AddScoped<IJWT, JWT>();
-builder.Services.AddAuthentication("APIValidationScheme")
-    .AddScheme<AuthenticationSchemeOptions, APIValidationHandler>("APIValidationScheme", null);
-builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+
+// Combine both authentication schemes if needed (optional)
+builder.Services.AddAuthentication(options =>
+{
+    options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+    options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+})
 .AddJwtBearer(options => {
     options.TokenValidationParameters = new TokenValidationParameters
     {
@@ -30,26 +32,27 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
         ValidateAudience = true,
         ValidateLifetime = true,
         ValidateIssuerSigningKey = true,
-        ValidIssuer = builder.Configuration["Jwt:Issuer"], // Remove the space before "Issuer"
+        ValidIssuer = builder.Configuration["Jwt:Issuer"],
         ValidAudience = builder.Configuration["Jwt:Audience"],
         IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"]))
     };
-});
+})
+.AddScheme<AuthenticationSchemeOptions, APIValidationHandler>("APIValidationScheme", null); // Optional if you want to keep custom validation
+
 builder.Services.AddAuthorization(options =>
 {
     options.AddPolicy("Boss", policy =>
-        policy.RequireClaim("Boss", "True")); // Adjust the value as per your requirement
+        policy.RequireClaim("Boss", "True"));
 });
 
 var app = builder.Build();
 
-if (app.Environment.IsDevelopment())
-{
-    app.UseSwagger();
-    app.UseSwaggerUI();
-}
+// Configure the HTTP request pipeline.
+
 app.UseSwagger();
 app.UseSwaggerUI();
+
+// Add authentication and authorization middleware
 app.UseAuthentication();
 app.UseAuthorization();
 
