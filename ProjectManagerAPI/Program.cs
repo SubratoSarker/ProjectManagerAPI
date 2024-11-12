@@ -44,11 +44,11 @@ builder.Services.AddAuthorization(options =>
     options.AddPolicy("Boss", policy =>
         policy.RequireClaim("Boss", "True"));
 });
-
+builder.Services.AddHealthChecks();
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
-
+app.MapHealthChecks("health");
 app.UseSwagger();
 app.UseSwaggerUI();
 
