@@ -42,7 +42,7 @@ namespace ProjectManagerAPI.Controllers.Task
         }
         [HttpGet]
         [Route("CreateTask")]
-        public async Task<IActionResult> CreateTask(string Name, string Description, string ReqFrom, int Enroll, int Project)
+        public async Task<IActionResult> CreateTask(string Name, string Description, string ReqFrom, int Priroty, DateOnly DeadLine, int Enroll, int Project)
         {
             try
             {
@@ -51,13 +51,15 @@ namespace ProjectManagerAPI.Controllers.Task
                 {
                     Direction = ParameterDirection.Output
                 };
-
+                //@Priroty int,@DeadLine date,
                 // Call the stored procedure asynchronously
                 await _dbContext.Database.ExecuteSqlRawAsync(
-                    "EXEC sprcreateTask @Name, @Description, @ReqFrom, @Enroll, @Project, @Msg OUT",
+                    "EXEC sprcreateTask @Name, @Description, @ReqFrom, @Priroty, @DeadLine, @Enroll, @Project, @Msg OUT",
                     new SqlParameter("@Name", Name),
                     new SqlParameter("@Description", Description),
                     new SqlParameter("@ReqFrom", ReqFrom),
+                    new SqlParameter("@Priroty", Priroty),
+                    new SqlParameter("@DeadLine", DeadLine),
                     new SqlParameter("@Enroll", Enroll),
                     new SqlParameter("@Project", Project),
                     msgParameter
