@@ -24,7 +24,7 @@ namespace ProjectManagerAPI.Controllers.Project
         }
         [HttpGet]
         [Route("Create")]
-        public async Task<IActionResult> Create(string Name, int Enroll)
+        public async Task<IActionResult> Create(string Name, DateOnly DeadLine, int Enroll)
         {
             try
             {
@@ -36,8 +36,9 @@ namespace ProjectManagerAPI.Controllers.Project
 
                 // Call the stored procedure asynchronously
                 await _dbContext.Database.ExecuteSqlRawAsync(
-                    "EXEC sprCreateProject @Name, @Enroll, @Msg OUT",
+                    "EXEC sprCreateProject @Name, @DeadLine, @Enroll, @Msg OUT",
                     new SqlParameter("@Name", Name),
+                    new SqlParameter("@DeadLine", DeadLine),
                     new SqlParameter("@Enroll", Enroll),
                     msgParameter
                 );

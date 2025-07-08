@@ -7,6 +7,7 @@ namespace ProjectManagerAPI.Model.ProjectModel
         [Key]
         public int IntProjectID { get; set; }
         public string StrProjectName { get; set; }
+        public DateOnly dteDeadLine { get; set; }
         public bool IsCompleate { get; set; }
         public string DaysPassed { get; set; }
         public int UserCount { get; set; }
