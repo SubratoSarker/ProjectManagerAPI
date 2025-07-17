@@ -1914,3 +1914,51 @@ BEGIN
 		values (@Enroll, @TmWorking, @Status, @Task)
 END
 GO
+-- ================================================
+-- Template generated from Template Explorer using:
+-- Create Procedure (New Menu).SQL
+--
+-- Use the Specify Values for Template Parameters 
+-- command (Ctrl-Shift-M) to fill in the parameter 
+-- values below.
+--
+-- This block of comments will not be included in
+-- the definition of the procedure.
+-- ================================================
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+-- =============================================
+-- Author:		<Author,,Name>
+-- Create date: <2025-7-17>
+-- Description:	<Description,,>
+-- =============================================
+CREATE PROCEDURE sprUpdateTask
+	@Task int,
+	@Name Varchar(max),
+	@Description Varchar(max),
+	@ReqFrom Varchar(max),
+	@Priroty int,
+	@DeadLine date,
+	@intUserID int,
+	@Msg varchar(MAX) out
+
+AS
+BEGIN
+	Begin try
+	Begin Transaction
+
+		update ProjectManagement.dbo.tblTask set strTaskName=@Name, strDescription=@Description, strRequestFrom=@ReqFrom, intPriroty=@Priroty, dteDeadLine=@DeadLine
+		where intTaskID=@Task
+
+		EXEC ProjectManagement.dbo.sprLog 'Update', 'Task Update', '', @intUserID
+		set @Msg='Task Updated Successfully!!!'
+	Commit
+	End try
+	Begin Catch
+		Rollback
+		set @Msg='Sorry there was an error'
+	End Catch
+END
+GO

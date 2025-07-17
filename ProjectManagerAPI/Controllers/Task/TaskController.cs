@@ -357,5 +357,46 @@ namespace ProjectManagerAPI.Controllers.Task
                 return null;
             }
         }
+        [HttpGet]
+        [Route("TaskUpdate")]
+        public async Task<IActionResult> TaskUpdate(int Task, string TaskName, string Description, string RequestFrom, int Priroty, DateTime DeadLine, int USerID)
+        {
+            try
+            {
+                // Define an output parameter to capture the message
+                var msgParameter = new SqlParameter("@Msg", SqlDbType.VarChar, -1)
+                {
+                    Direction = ParameterDirection.Output
+                };
+
+                // Call the stored procedure asynchronously
+                await _dbContext.Database.ExecuteSqlRawAsync(
+                    "EXEC sprUpdateTask @Task, @Name, @Description, @ReqFrom, @Priroty, @DeadLine, @intUserID, @Msg OUT",
+                    new SqlParameter("@Task", Task),
+                    new SqlParameter("@Name", TaskName),
+                    new SqlParameter("@Description", Description),
+                    new SqlParameter("@ReqFrom", RequestFrom),
+                    new SqlParameter("@Priroty", Priroty),
+                    new SqlParameter("@DeadLine", DeadLine),
+                    new SqlParameter("@intUserID", USerID),
+                    msgParameter
+                );
+
+                // Retrieve the output parameter value
+                var message = msgParameter.Value?.ToString();
+
+                return new JsonResult(message);
+            }
+            catch (DbUpdateException dbEx)
+            {
+                // Handle specific database update exception
+                return StatusCode(503, "Database temporarily unavailable.");
+            }
+            catch (Exception ex)
+            {
+                // Handle other exceptions
+                return StatusCode(500, $"Database connection failed: {ex.Message}");
+            }
+        }
     }
 }
