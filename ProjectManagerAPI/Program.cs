@@ -16,6 +16,9 @@ builder.Services.AddSwaggerGen();
 builder.Services.AddDbContext<ApplicationDBContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("TaskDB"))
 );
+builder.Services.AddDbContext<HRDBContext>(options =>
+    options.UseSqlServer(builder.Configuration.GetConnectionString("ERP_HR"))
+);
 builder.Services.AddScoped<IAPIValidation, APIValidation>();
 builder.Services.AddScoped<IJWT, JWT>();
 
