@@ -1,0 +1,2066 @@
+﻿USE [master]
+GO
+/****** Object:  Database [ProjectManagement]    Script Date: 9/16/2025 1:37:28 PM ******/
+CREATE DATABASE [ProjectManagement]
+ CONTAINMENT = NONE
+ ON  PRIMARY 
+( NAME = N'ProjectManagement', FILENAME = N'E:\MDF\ProjectManagement.mdf' , SIZE = 8192KB , MAXSIZE = UNLIMITED, FILEGROWTH = 65536KB )
+ LOG ON 
+( NAME = N'ProjectManagement_log', FILENAME = N'E:\LDF\ProjectManagement_log.ldf' , SIZE = 73728KB , MAXSIZE = 2048GB , FILEGROWTH = 65536KB )
+ WITH CATALOG_COLLATION = DATABASE_DEFAULT
+GO
+ALTER DATABASE [ProjectManagement] SET COMPATIBILITY_LEVEL = 150
+GO
+IF (1 = FULLTEXTSERVICEPROPERTY('IsFullTextInstalled'))
+begin
+EXEC [ProjectManagement].[dbo].[sp_fulltext_database] @action = 'enable'
+end
+GO
+ALTER DATABASE [ProjectManagement] SET ANSI_NULL_DEFAULT OFF 
+GO
+ALTER DATABASE [ProjectManagement] SET ANSI_NULLS OFF 
+GO
+ALTER DATABASE [ProjectManagement] SET ANSI_PADDING OFF 
+GO
+ALTER DATABASE [ProjectManagement] SET ANSI_WARNINGS OFF 
+GO
+ALTER DATABASE [ProjectManagement] SET ARITHABORT OFF 
+GO
+ALTER DATABASE [ProjectManagement] SET AUTO_CLOSE OFF 
+GO
+ALTER DATABASE [ProjectManagement] SET AUTO_SHRINK OFF 
+GO
+ALTER DATABASE [ProjectManagement] SET AUTO_UPDATE_STATISTICS ON 
+GO
+ALTER DATABASE [ProjectManagement] SET CURSOR_CLOSE_ON_COMMIT OFF 
+GO
+ALTER DATABASE [ProjectManagement] SET CURSOR_DEFAULT  GLOBAL 
+GO
+ALTER DATABASE [ProjectManagement] SET CONCAT_NULL_YIELDS_NULL OFF 
+GO
+ALTER DATABASE [ProjectManagement] SET NUMERIC_ROUNDABORT OFF 
+GO
+ALTER DATABASE [ProjectManagement] SET QUOTED_IDENTIFIER OFF 
+GO
+ALTER DATABASE [ProjectManagement] SET RECURSIVE_TRIGGERS OFF 
+GO
+ALTER DATABASE [ProjectManagement] SET  DISABLE_BROKER 
+GO
+ALTER DATABASE [ProjectManagement] SET AUTO_UPDATE_STATISTICS_ASYNC OFF 
+GO
+ALTER DATABASE [ProjectManagement] SET DATE_CORRELATION_OPTIMIZATION OFF 
+GO
+ALTER DATABASE [ProjectManagement] SET TRUSTWORTHY OFF 
+GO
+ALTER DATABASE [ProjectManagement] SET ALLOW_SNAPSHOT_ISOLATION OFF 
+GO
+ALTER DATABASE [ProjectManagement] SET PARAMETERIZATION SIMPLE 
+GO
+ALTER DATABASE [ProjectManagement] SET READ_COMMITTED_SNAPSHOT OFF 
+GO
+ALTER DATABASE [ProjectManagement] SET HONOR_BROKER_PRIORITY OFF 
+GO
+ALTER DATABASE [ProjectManagement] SET RECOVERY FULL 
+GO
+ALTER DATABASE [ProjectManagement] SET  MULTI_USER 
+GO
+ALTER DATABASE [ProjectManagement] SET PAGE_VERIFY CHECKSUM  
+GO
+ALTER DATABASE [ProjectManagement] SET DB_CHAINING OFF 
+GO
+ALTER DATABASE [ProjectManagement] SET FILESTREAM( NON_TRANSACTED_ACCESS = OFF ) 
+GO
+ALTER DATABASE [ProjectManagement] SET TARGET_RECOVERY_TIME = 60 SECONDS 
+GO
+ALTER DATABASE [ProjectManagement] SET DELAYED_DURABILITY = DISABLED 
+GO
+ALTER DATABASE [ProjectManagement] SET ACCELERATED_DATABASE_RECOVERY = OFF  
+GO
+EXEC sys.sp_db_vardecimal_storage_format N'ProjectManagement', N'ON'
+GO
+ALTER DATABASE [ProjectManagement] SET QUERY_STORE = OFF
+GO
+USE [ProjectManagement]
+GO
+/****** Object:  User [sifat549948]    Script Date: 9/16/2025 1:37:29 PM ******/
+CREATE USER [sifat549948] FOR LOGIN [sifat549948] WITH DEFAULT_SCHEMA=[dbo]
+GO
+/****** Object:  User [shahadattestdb]    Script Date: 9/16/2025 1:37:29 PM ******/
+CREATE USER [shahadattestdb] FOR LOGIN [shahadattestdb] WITH DEFAULT_SCHEMA=[dbo]
+GO
+/****** Object:  User [sadia]    Script Date: 9/16/2025 1:37:29 PM ******/
+CREATE USER [sadia] FOR LOGIN [fahim.dev] WITH DEFAULT_SCHEMA=[dbo]
+GO
+/****** Object:  User [Miyad]    Script Date: 9/16/2025 1:37:29 PM ******/
+CREATE USER [Miyad] FOR LOGIN [Miyad] WITH DEFAULT_SCHEMA=[dbo]
+GO
+/****** Object:  User [mahamuda1.corp]    Script Date: 9/16/2025 1:37:29 PM ******/
+CREATE USER [mahamuda1.corp] FOR LOGIN [mahamuda.corp] WITH DEFAULT_SCHEMA=[dbo]
+GO
+/****** Object:  User [dbtestpranta]    Script Date: 9/16/2025 1:37:29 PM ******/
+CREATE USER [dbtestpranta] WITHOUT LOGIN WITH DEFAULT_SCHEMA=[dbo]
+GO
+/****** Object:  User [dbtest.fahim]    Script Date: 9/16/2025 1:37:29 PM ******/
+CREATE USER [dbtest.fahim] FOR LOGIN [dbtest.fahim] WITH DEFAULT_SCHEMA=[dbo]
+GO
+ALTER ROLE [db_datareader] ADD MEMBER [Miyad]
+GO
+/****** Object:  UserDefinedFunction [dbo].[funAgging]    Script Date: 9/16/2025 1:37:29 PM ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+-- =============================================
+-- Author:		<Author,,Name>
+-- Create date: <Create Date, ,>
+-- Description:	<Description, ,>
+-- =============================================
+CREATE FUNCTION [dbo].[funAgging]
+(
+	@Date DATE
+)
+RETURNS VARCHAR(100)
+AS
+BEGIN
+	-- Default to today if @Date is NULL
+	SET @Date = ISNULL(@Date, GETDATE());
+
+	DECLARE @Years INT = DATEDIFF(YEAR, @Date, GETDATE());
+	DECLARE @Months INT = DATEDIFF(MONTH, DATEADD(YEAR, @Years, @Date), GETDATE());
+	DECLARE @Days INT = DATEDIFF(DAY, DATEADD(MONTH, @Months, DATEADD(YEAR, @Years, @Date)), GETDATE());
+
+	IF @Days < 0
+	BEGIN
+		SET @Months = @Months - 1;
+		SET @Days = DATEDIFF(DAY, DATEADD(MONTH, @Months, DATEADD(YEAR, @Years, @Date)), GETDATE());
+	END
+
+	IF @Months < 0
+	BEGIN
+		SET @Years = @Years - 1;
+		SET @Months = DATEDIFF(MONTH, DATEADD(YEAR, @Years, @Date), GETDATE());
+		SET @Days = DATEDIFF(DAY, DATEADD(MONTH, @Months, DATEADD(YEAR, @Years, @Date)), GETDATE());
+	END
+
+	DECLARE @Length VARCHAR(100) = '';
+
+	IF @Years > 0
+		SET @Length = CONCAT(@Length, @Years, ' year', CASE WHEN @Years != 1 THEN 's ' ELSE ' ' END);
+
+	IF @Months > 0
+		SET @Length = CONCAT(@Length, @Months, ' month', CASE WHEN @Months != 1 THEN 's ' ELSE ' ' END);
+
+	IF @Days > 0
+		SET @Length = CONCAT(@Length, @Days, ' day', CASE WHEN @Days != 1 THEN 's' ELSE '' END);
+
+	IF @Length = ''
+		SET @Length = 'Today';
+
+	SET @Length = RTRIM(@Length);
+
+	RETURN @Length;
+END
+GO
+/****** Object:  UserDefinedFunction [dbo].[funTaskPerProjectByUser]    Script Date: 9/16/2025 1:37:29 PM ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+-- =============================================
+-- Author:		<Author,,Name>
+-- Create date: <Create Date, ,>
+-- Description:	<Description, ,>
+-- =============================================
+CREATE FUNCTION [dbo].[funTaskPerProjectByUser]
+(
+	@Project int,
+	@Enroll int
+)
+RETURNS int
+AS
+BEGIN
+	Declare @Count int
+	set @Count=(SELECT isNull(count(*),0)
+		  FROM ProjectManagement.dbo.tblTask t
+		  inner join ProjectManagement.dbo.tblTaskDetail d on t.intTaskID=d.intTaskID
+		  where d.intUserID=@Enroll and t.intProjectID=@Project and d.intStatusID not in (5,6,7,8)
+		  )
+	return @count
+END
+
+
+GO
+/****** Object:  UserDefinedFunction [dbo].[funUserAssigntoProject]    Script Date: 9/16/2025 1:37:29 PM ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+-- =============================================
+-- Author:		<Author,,Name>
+-- Create date: <Create Date, ,>
+-- Description:	<Description, ,>
+-- select * from dbo.funUserAssigntoProject(10)
+-- =============================================
+CREATE FUNCTION [dbo].[funUserAssigntoProject]
+(
+	@Project int
+)
+RETURNS int
+AS
+BEGIN
+	Declare @Count int
+	--set @Count=(select Count(*) from [ProjectManagement].[dbo].[tblProjectAssign] where intProjectID=@Project and isActive=1)
+	set @Count=(select Count(*)
+				from [ProjectManagement].[dbo].[tblProjectAssign] a
+				inner join [ProjectManagement].[dbo].[tblUser] u on u.intUserID=a.intUserID
+				where intProjectID=@Project and a.isActive=1 and u.isActive=1)
+	return @count
+END
+GO
+/****** Object:  Table [dbo].[tblActivityLog]    Script Date: 9/16/2025 1:37:29 PM ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+CREATE TABLE [dbo].[tblActivityLog](
+	[intActivityID] [int] IDENTITY(1,1) NOT NULL,
+	[strType] [varchar](200) NOT NULL,
+	[strProcess] [varchar](500) NOT NULL,
+	[strDescription] [varchar](max) NOT NULL,
+	[intActionBy] [int] NOT NULL,
+	[dteAction] [datetime] NOT NULL,
+ CONSTRAINT [PK_tblActivityLog] PRIMARY KEY CLUSTERED 
+(
+	[intActivityID] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
+) ON [PRIMARY] TEXTIMAGE_ON [PRIMARY]
+GO
+/****** Object:  Table [dbo].[tblAPIAccessPermission]    Script Date: 9/16/2025 1:37:29 PM ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+CREATE TABLE [dbo].[tblAPIAccessPermission](
+	[ID] [int] IDENTITY(1,1) NOT NULL,
+	[USERNAME] [nvarchar](50) NOT NULL,
+	[PASSWORD] [nvarchar](max) NOT NULL,
+	[ISACTIVE] [bit] NOT NULL,
+ CONSTRAINT [PK_TBLAPIACCESSPERMISSION] PRIMARY KEY CLUSTERED 
+(
+	[ID] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
+) ON [PRIMARY] TEXTIMAGE_ON [PRIMARY]
+GO
+/****** Object:  Table [dbo].[tblNotification]    Script Date: 9/16/2025 1:37:29 PM ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+CREATE TABLE [dbo].[tblNotification](
+	[intID] [int] IDENTITY(1,1) NOT NULL,
+	[intUserID] [int] NOT NULL,
+	[strMsg] [varchar](max) NOT NULL,
+	[isSent] [bit] NULL,
+ CONSTRAINT [PK_tblNotification] PRIMARY KEY CLUSTERED 
+(
+	[intID] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
+) ON [PRIMARY] TEXTIMAGE_ON [PRIMARY]
+GO
+/****** Object:  Table [dbo].[tblProject]    Script Date: 9/16/2025 1:37:29 PM ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+CREATE TABLE [dbo].[tblProject](
+	[intProjectID] [int] IDENTITY(1,1) NOT NULL,
+	[strProjectName] [varchar](500) NOT NULL,
+	[intCreatedBy] [int] NOT NULL,
+	[intTeamID] [int] NOT NULL,
+	[dteDeadLine] [date] NOT NULL,
+	[dteCreated] [datetime] NOT NULL,
+	[isActive] [bit] NOT NULL,
+	[isCompleate] [bit] NOT NULL,
+ CONSTRAINT [PK_tblProject] PRIMARY KEY CLUSTERED 
+(
+	[intProjectID] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
+) ON [PRIMARY]
+GO
+/****** Object:  Table [dbo].[tblProjectAssign]    Script Date: 9/16/2025 1:37:29 PM ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+CREATE TABLE [dbo].[tblProjectAssign](
+	[intPojectAssignID] [int] IDENTITY(1,1) NOT NULL,
+	[dteAssign] [datetime] NOT NULL,
+	[intUserID] [int] NOT NULL,
+	[isActive] [bit] NULL,
+	[intProjectID] [int] NOT NULL,
+ CONSTRAINT [PK_tblProjectAssign] PRIMARY KEY CLUSTERED 
+(
+	[intPojectAssignID] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
+) ON [PRIMARY]
+GO
+/****** Object:  Table [dbo].[tblRandomCharsHelper]    Script Date: 9/16/2025 1:37:29 PM ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+CREATE TABLE [dbo].[tblRandomCharsHelper](
+	[id] [int] IDENTITY(1,1) NOT NULL,
+	[char] [nvarchar](1) NULL,
+PRIMARY KEY CLUSTERED 
+(
+	[id] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
+) ON [PRIMARY]
+GO
+/****** Object:  Table [dbo].[tblRequest]    Script Date: 9/16/2025 1:37:29 PM ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+CREATE TABLE [dbo].[tblRequest](
+	[intID] [int] IDENTITY(1,1) NOT NULL,
+	[strTaskName] [varchar](500) NOT NULL,
+	[strDescription] [varchar](max) NOT NULL,
+	[strRequestFrom] [varchar](500) NOT NULL,
+	[intUserID] [int] NOT NULL,
+	[intProjectID] [int] NOT NULL,
+	[dteCreated] [datetime] NOT NULL,
+	[intStatusID] [int] NOT NULL,
+	[tmWorking] [time](7) NOT NULL,
+	[strFrom] [varchar](200) NOT NULL,
+	[strTo] [varchar](200) NOT NULL,
+	[intTaskID] [int] NULL,
+	[isAction] [bit] NULL,
+	[dteAction] [datetime] NULL,
+ CONSTRAINT [PK_tblRequest] PRIMARY KEY CLUSTERED 
+(
+	[intID] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
+) ON [PRIMARY] TEXTIMAGE_ON [PRIMARY]
+GO
+/****** Object:  Table [dbo].[tblSecurityCheck]    Script Date: 9/16/2025 1:37:29 PM ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+CREATE TABLE [dbo].[tblSecurityCheck](
+	[intId] [int] IDENTITY(1,1) NOT NULL,
+	[intUserID] [int] NOT NULL,
+	[strOTP] [varchar](20) NOT NULL,
+	[dteInsertTime] [datetime] NOT NULL,
+	[dteExpTime] [datetime] NOT NULL,
+	[isUsed] [bit] NULL,
+ CONSTRAINT [PK_tblSecurityCheck] PRIMARY KEY CLUSTERED 
+(
+	[intId] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
+) ON [PRIMARY]
+GO
+/****** Object:  Table [dbo].[tblStatus]    Script Date: 9/16/2025 1:37:29 PM ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+CREATE TABLE [dbo].[tblStatus](
+	[intStatusID] [int] IDENTITY(1,1) NOT NULL,
+	[strStatus] [varchar](50) NOT NULL,
+ CONSTRAINT [PK_tblStatus] PRIMARY KEY CLUSTERED 
+(
+	[intStatusID] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
+) ON [PRIMARY]
+GO
+/****** Object:  Table [dbo].[tblSteps]    Script Date: 9/16/2025 1:37:29 PM ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+CREATE TABLE [dbo].[tblSteps](
+	[intStepId] [int] IDENTITY(1,1) NOT NULL,
+	[strStep] [varchar](500) NULL,
+	[intTaskID] [int] NULL,
+	[isDone] [bit] NULL,
+ CONSTRAINT [PK_tblSteps] PRIMARY KEY CLUSTERED 
+(
+	[intStepId] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
+) ON [PRIMARY]
+GO
+/****** Object:  Table [dbo].[tblTask]    Script Date: 9/16/2025 1:37:29 PM ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+CREATE TABLE [dbo].[tblTask](
+	[intTaskID] [int] IDENTITY(1,1) NOT NULL,
+	[strTaskName] [varchar](500) NOT NULL,
+	[strDescription] [varchar](max) NOT NULL,
+	[strRequestFrom] [varchar](500) NOT NULL,
+	[intPriroty] [int] NOT NULL,
+	[dteDeadLine] [date] NOT NULL,
+	[intUserID] [int] NOT NULL,
+	[dteCreated] [datetime] NOT NULL,
+	[intProjectID] [int] NOT NULL,
+ CONSTRAINT [PK_tblTask] PRIMARY KEY CLUSTERED 
+(
+	[intTaskID] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
+) ON [PRIMARY] TEXTIMAGE_ON [PRIMARY]
+GO
+/****** Object:  Table [dbo].[tblTaskDetail]    Script Date: 9/16/2025 1:37:29 PM ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+CREATE TABLE [dbo].[tblTaskDetail](
+	[intTaskDetail] [int] IDENTITY(1,1) NOT NULL,
+	[intTaskID] [int] NULL,
+	[intUserID] [int] NULL,
+	[intStatusID] [int] NULL,
+	[tmWorking] [time](7) NULL,
+ CONSTRAINT [PK_tblTaskDetail] PRIMARY KEY CLUSTERED 
+(
+	[intTaskDetail] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
+) ON [PRIMARY]
+GO
+/****** Object:  Table [dbo].[tblTeam]    Script Date: 9/16/2025 1:37:29 PM ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+CREATE TABLE [dbo].[tblTeam](
+	[intTeamID] [int] IDENTITY(1,1) NOT NULL,
+	[strTeamName] [varchar](200) NOT NULL,
+	[isActive] [bit] NOT NULL,
+	[intUserID] [int] NOT NULL,
+ CONSTRAINT [PK_tblTeam] PRIMARY KEY CLUSTERED 
+(
+	[intTeamID] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
+) ON [PRIMARY]
+GO
+/****** Object:  Table [dbo].[tblUser]    Script Date: 9/16/2025 1:37:29 PM ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+CREATE TABLE [dbo].[tblUser](
+	[intUserID] [int] IDENTITY(1,1) NOT NULL,
+	[strUserName] [varchar](500) NOT NULL,
+	[strPhone] [varchar](11) NOT NULL,
+	[strEmail] [varchar](200) NOT NULL,
+	[intTeamID] [int] NOT NULL,
+	[isActive] [bit] NOT NULL,
+	[isAdmin] [bit] NOT NULL,
+ CONSTRAINT [PK_tblUser] PRIMARY KEY CLUSTERED 
+(
+	[intUserID] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
+) ON [PRIMARY]
+GO
+/****** Object:  Table [dbo].[tblUserSecurity]    Script Date: 9/16/2025 1:37:29 PM ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+CREATE TABLE [dbo].[tblUserSecurity](
+	[intUserSecurityID] [int] IDENTITY(1,1) NOT NULL,
+	[intUserID] [int] NOT NULL,
+	[strKey] [varbinary](max) NOT NULL,
+	[dteValidTo] [datetime] NOT NULL,
+	[intFailedAttamped] [int] NOT NULL,
+	[isLocked]  AS (case when [intFailedAttamped]>=(5) then (1) else (0) end),
+ CONSTRAINT [PK_tblUserSecurity] PRIMARY KEY CLUSTERED 
+(
+	[intUserSecurityID] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
+) ON [PRIMARY] TEXTIMAGE_ON [PRIMARY]
+GO
+/****** Object:  Table [dbo].[tblWorkLog]    Script Date: 9/16/2025 1:37:29 PM ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+CREATE TABLE [dbo].[tblWorkLog](
+	[intWorkLog] [int] IDENTITY(1,1) NOT NULL,
+	[dteInsert] [datetime] NOT NULL,
+	[intUserID] [int] NOT NULL,
+	[tmWorking] [time](7) NOT NULL,
+	[intStatusID] [int] NOT NULL,
+	[intTaskID] [int] NOT NULL,
+ CONSTRAINT [PK_tblWorkLog] PRIMARY KEY CLUSTERED 
+(
+	[intWorkLog] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
+) ON [PRIMARY]
+GO
+ALTER TABLE [dbo].[tblActivityLog] ADD  CONSTRAINT [DF_tblActivityLog_dteAction]  DEFAULT (getdate()) FOR [dteAction]
+GO
+ALTER TABLE [dbo].[tblNotification] ADD  CONSTRAINT [DF_tblNotification_isSent]  DEFAULT ((0)) FOR [isSent]
+GO
+ALTER TABLE [dbo].[tblProjectAssign] ADD  CONSTRAINT [DF_tblProjectAssign_dteAssign]  DEFAULT (getdate()) FOR [dteAssign]
+GO
+ALTER TABLE [dbo].[tblProjectAssign] ADD  CONSTRAINT [DF_tblProjectAssign_isActive]  DEFAULT ((1)) FOR [isActive]
+GO
+ALTER TABLE [dbo].[tblRequest] ADD  CONSTRAINT [DF_tblRequest_dteCreated]  DEFAULT (getdate()) FOR [dteCreated]
+GO
+ALTER TABLE [dbo].[tblSecurityCheck] ADD  CONSTRAINT [DF_tblSecurityCheck_dteInsertTime]  DEFAULT (getdate()) FOR [dteInsertTime]
+GO
+ALTER TABLE [dbo].[tblSecurityCheck] ADD  CONSTRAINT [DF_tblSecurityCheck_dteExpTime]  DEFAULT (dateadd(minute,(2),getdate())) FOR [dteExpTime]
+GO
+ALTER TABLE [dbo].[tblSecurityCheck] ADD  CONSTRAINT [DF_tblSecurityCheck_isUsed]  DEFAULT ((0)) FOR [isUsed]
+GO
+ALTER TABLE [dbo].[tblTask] ADD  CONSTRAINT [DF_tblTask_dteCreated]  DEFAULT (getdate()) FOR [dteCreated]
+GO
+ALTER TABLE [dbo].[tblWorkLog] ADD  CONSTRAINT [DF_tblWorkLog_dteInsert]  DEFAULT (getdate()) FOR [dteInsert]
+GO
+ALTER TABLE [dbo].[tblActivityLog]  WITH CHECK ADD  CONSTRAINT [FK_tblActivityLog_tblUser] FOREIGN KEY([intActionBy])
+REFERENCES [dbo].[tblUser] ([intUserID])
+GO
+ALTER TABLE [dbo].[tblActivityLog] CHECK CONSTRAINT [FK_tblActivityLog_tblUser]
+GO
+ALTER TABLE [dbo].[tblProject]  WITH CHECK ADD  CONSTRAINT [FK_tblProject_tblUser] FOREIGN KEY([intCreatedBy])
+REFERENCES [dbo].[tblUser] ([intUserID])
+GO
+ALTER TABLE [dbo].[tblProject] CHECK CONSTRAINT [FK_tblProject_tblUser]
+GO
+ALTER TABLE [dbo].[tblProjectAssign]  WITH CHECK ADD  CONSTRAINT [FK_tblProjectAssign_tblProject] FOREIGN KEY([intProjectID])
+REFERENCES [dbo].[tblProject] ([intProjectID])
+GO
+ALTER TABLE [dbo].[tblProjectAssign] CHECK CONSTRAINT [FK_tblProjectAssign_tblProject]
+GO
+ALTER TABLE [dbo].[tblProjectAssign]  WITH CHECK ADD  CONSTRAINT [FK_tblProjectAssign_tblUser2] FOREIGN KEY([intUserID])
+REFERENCES [dbo].[tblUser] ([intUserID])
+GO
+ALTER TABLE [dbo].[tblProjectAssign] CHECK CONSTRAINT [FK_tblProjectAssign_tblUser2]
+GO
+ALTER TABLE [dbo].[tblSecurityCheck]  WITH CHECK ADD  CONSTRAINT [FK_tblSecurityCheck_tblUser] FOREIGN KEY([intUserID])
+REFERENCES [dbo].[tblUser] ([intUserID])
+GO
+ALTER TABLE [dbo].[tblSecurityCheck] CHECK CONSTRAINT [FK_tblSecurityCheck_tblUser]
+GO
+ALTER TABLE [dbo].[tblSteps]  WITH CHECK ADD  CONSTRAINT [FK_tblSteps_tblSteps] FOREIGN KEY([intTaskID])
+REFERENCES [dbo].[tblTask] ([intTaskID])
+GO
+ALTER TABLE [dbo].[tblSteps] CHECK CONSTRAINT [FK_tblSteps_tblSteps]
+GO
+ALTER TABLE [dbo].[tblTask]  WITH CHECK ADD  CONSTRAINT [FK_tblTask_tblProject] FOREIGN KEY([intProjectID])
+REFERENCES [dbo].[tblProject] ([intProjectID])
+GO
+ALTER TABLE [dbo].[tblTask] CHECK CONSTRAINT [FK_tblTask_tblProject]
+GO
+ALTER TABLE [dbo].[tblTask]  WITH CHECK ADD  CONSTRAINT [FK_tblTask_tblUser] FOREIGN KEY([intUserID])
+REFERENCES [dbo].[tblUser] ([intUserID])
+GO
+ALTER TABLE [dbo].[tblTask] CHECK CONSTRAINT [FK_tblTask_tblUser]
+GO
+ALTER TABLE [dbo].[tblTaskDetail]  WITH CHECK ADD  CONSTRAINT [FK_tblTaskDetail_tblStatus] FOREIGN KEY([intStatusID])
+REFERENCES [dbo].[tblStatus] ([intStatusID])
+GO
+ALTER TABLE [dbo].[tblTaskDetail] CHECK CONSTRAINT [FK_tblTaskDetail_tblStatus]
+GO
+ALTER TABLE [dbo].[tblTaskDetail]  WITH CHECK ADD  CONSTRAINT [FK_tblTaskDetail_tblUser] FOREIGN KEY([intUserID])
+REFERENCES [dbo].[tblUser] ([intUserID])
+GO
+ALTER TABLE [dbo].[tblTaskDetail] CHECK CONSTRAINT [FK_tblTaskDetail_tblUser]
+GO
+ALTER TABLE [dbo].[tblTeam]  WITH CHECK ADD  CONSTRAINT [FK_tblTeam_tblUser] FOREIGN KEY([intUserID])
+REFERENCES [dbo].[tblUser] ([intUserID])
+GO
+ALTER TABLE [dbo].[tblTeam] CHECK CONSTRAINT [FK_tblTeam_tblUser]
+GO
+ALTER TABLE [dbo].[tblUser]  WITH CHECK ADD  CONSTRAINT [FK_tblUser_tblTeam] FOREIGN KEY([intTeamID])
+REFERENCES [dbo].[tblTeam] ([intTeamID])
+GO
+ALTER TABLE [dbo].[tblUser] CHECK CONSTRAINT [FK_tblUser_tblTeam]
+GO
+ALTER TABLE [dbo].[tblUserSecurity]  WITH CHECK ADD  CONSTRAINT [FK_tblUserSecurity_tblUser] FOREIGN KEY([intUserID])
+REFERENCES [dbo].[tblUser] ([intUserID])
+GO
+ALTER TABLE [dbo].[tblUserSecurity] CHECK CONSTRAINT [FK_tblUserSecurity_tblUser]
+GO
+ALTER TABLE [dbo].[tblWorkLog]  WITH CHECK ADD  CONSTRAINT [FK_tblWorkLog_tblStatus] FOREIGN KEY([intStatusID])
+REFERENCES [dbo].[tblStatus] ([intStatusID])
+GO
+ALTER TABLE [dbo].[tblWorkLog] CHECK CONSTRAINT [FK_tblWorkLog_tblStatus]
+GO
+ALTER TABLE [dbo].[tblWorkLog]  WITH CHECK ADD  CONSTRAINT [FK_tblWorkLog_tblUser] FOREIGN KEY([intUserID])
+REFERENCES [dbo].[tblUser] ([intUserID])
+GO
+ALTER TABLE [dbo].[tblWorkLog] CHECK CONSTRAINT [FK_tblWorkLog_tblUser]
+GO
+/****** Object:  StoredProcedure [dbo].[GetTask]    Script Date: 9/16/2025 1:37:29 PM ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+-- =============================================
+-- Author:		<Author,,Name>
+-- Create date: <Create Date,,>
+-- Description:	<Description,,>
+-- =============================================
+CREATE PROCEDURE [dbo].[GetTask] 
+	@TaskID int
+AS
+BEGIN
+	--select t.intTaskID, t.strTaskName, t.strDescription, t.strRequestFrom, td.tmWorking, CAST(DATEDIFF(DAY, t.dteCreated, GETDATE()) AS VARCHAR) + ' days ' + 
+ --   CAST(DATEDIFF(HOUR, t.dteCreated, GETDATE()) % 24 AS VARCHAR) + ' hours' AS Agging, p.strProjectName
+		select t.intTaskID, t.strTaskName, t.strDescription, t.strRequestFrom, t.intPriroty, t.dteDeadLine, td.tmWorking, CAST(DATEDIFF(DAY, t.dteCreated, GETDATE()) AS VARCHAR) + ' days ' + CAST(DATEDIFF(HOUR, t.dteCreated, GETDATE()) % 24 AS VARCHAR) + ' hours' AS Agging, p.strProjectName
+		from ProjectManagement.dbo.tblTaskDetail td
+		inner join ProjectManagement.dbo.tblTask t on t.intTaskID=td.intTaskID
+		inner join ProjectManagement.dbo.tblProject p on p.intProjectID=t.intProjectID
+		where t.intTaskID=@TaskID
+		order by t.intTaskID
+END
+GO
+/****** Object:  StoredProcedure [dbo].[PerformanceReprot]    Script Date: 9/16/2025 1:37:29 PM ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+-- =============================================
+-- Author:		<Author,,Name>
+-- Create date: <Create Date,,>
+-- Description:	<Description,,>
+-- EXEC PerformanceReprot '2024-6-1', '2024-9-1', 2, 0
+-- =============================================
+CREATE PROCEDURE [dbo].[PerformanceReprot]
+	@FromDate date,
+	@ToDate date,
+	@User int,
+	@Project int
+AS
+BEGIN
+	WITH CTE_ConvertedTime AS (
+	SELECT
+		intUserID,
+		intTaskID,
+		CAST(dteInsert AS DATE) AS dteInsertDate,
+		DATEDIFF(SECOND, '00:00:00', tmWorking) AS WorkingSeconds
+	FROM
+		ProjectManagement.dbo.tblWorkLog
+	WHERE
+		CAST(dteInsert AS DATE) BETWEEN @FromDate AND @ToDate
+	),
+	CTE_SumTime AS (
+		SELECT
+			intUserID,
+			intTaskID,
+			SUM(WorkingSeconds) AS TotalWorkingSeconds
+		FROM
+			CTE_ConvertedTime
+		GROUP BY
+			intUserID,
+			intTaskID
+	),
+	CTE_TotalTime AS (
+		SELECT
+			SUM(TotalWorkingSeconds) AS TotalWorkingSecondsAll
+		FROM
+			CTE_SumTime
+		WHERE
+			intUserID = @User
+	)
+	SELECT 
+		t.intTaskID,
+		t.strTaskName,
+		t.strDescription,
+		t.strRequestFrom,
+		p.strProjectName,
+		CONVERT(TIME, DATEADD(SECOND, st.TotalWorkingSeconds, '00:00:00')) AS tmWorking,
+		CAST(ROUND(100.0 * st.TotalWorkingSeconds / tt.TotalWorkingSecondsAll, 2) AS DECIMAL(5, 2)) AS WorkPercent
+	FROM 
+		ProjectManagement.dbo.tblTask t 
+		INNER JOIN ProjectManagement.dbo.tblProject p ON p.intProjectID = t.intProjectID
+		INNER JOIN CTE_SumTime st ON st.intTaskID = t.intTaskID 
+		CROSS JOIN CTE_TotalTime tt
+	WHERE 
+		st.intUserID=@User and p.intProjectID = case when @Project=0 then p.intProjectID else @Project end
+END
+GO
+/****** Object:  StoredProcedure [dbo].[PerformanceReprotTeam]    Script Date: 9/16/2025 1:37:29 PM ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+-- =============================================
+-- Author:		<Author,,Name>
+-- Create date: <Create Date,,>
+-- Description:	<Description,,>
+-- exec PerformanceReprotTeam 2, '2024-01-01', '2024-10-01'
+-- =============================================
+CREATE PROCEDURE [dbo].[PerformanceReprotTeam]
+	@User int,
+	@FromDate date,
+	@ToDate date
+AS
+BEGIN
+
+	WITH CTE_ConvertedTime AS (
+		SELECT
+			intUserID,
+			CAST(dteInsert AS DATE) AS dteInsertDate,
+			DATEDIFF(SECOND, '00:00:00', tmWorking) AS WorkingSeconds
+		FROM dbo.tblWorkLog
+		WHERE CAST(dteInsert AS DATE) BETWEEN @FromDate AND @ToDate
+	),
+	CTE_SumTime AS (
+		SELECT
+			intUserID,
+			dteInsertDate,
+			SUM(WorkingSeconds) AS TotalWorkingSeconds
+		FROM CTE_ConvertedTime
+		GROUP BY intUserID, dteInsertDate
+	)
+	select cast( ROW_NUMBER() OVER (ORDER BY dteInsertDate , u.intUserID) as int) as ID, cast(u.intUserID as int) as intUserID, u.strUserName , t.dteInsertDate, CONVERT(TIME, DATEADD(SECOND, t.TotalWorkingSeconds, '00:00:00')) AS tmWorking
+	from CTE_SumTime t
+	inner join ProjectManagement.dbo.tblUser u on u.intUserID=t.intUserID
+	inner join ProjectManagement.dbo.tblTeam tm on tm.intTeamID=u.intTeamID
+	where tm.intUserID=@User
+END
+GO
+/****** Object:  StoredProcedure [dbo].[sprAssignUser]    Script Date: 9/16/2025 1:37:29 PM ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+-- =============================================
+-- Author:		<Author,,Name>
+-- Create date: <Create Date,,>
+-- Description:	<Description,,>
+-- =============================================
+CREATE PROCEDURE [dbo].[sprAssignUser]
+	@User int,
+	@Project int,
+	@Active bit,
+	@Enroll int,
+	@Msg varchar(MAX) out
+AS
+BEGIN
+	Declare @Details varchar(max)
+	Declare @UserName varchar(MAX), @ProjectName varchar(MAX),  @Notify varchar(MAX)
+	select top 1 @UserName=strUserName from ProjectManagement.dbo.tblUser where intUserID=@User
+	select top 1 @ProjectName=strProjectName from ProjectManagement.dbo.tblProject where intProjectID=@Project
+
+	IF Exists(select * from ProjectManagement.dbo.tblProjectAssign where intUserID=@User and intProjectID=@Project)
+	Begin
+		Declare @ActiveState bit= (select top 1 isActive from ProjectManagement.dbo.tblProjectAssign where intUserID=@User and intProjectID=@Project)
+		IF(@ActiveState!=@Active)
+		Begin
+			update ProjectManagement.dbo.tblProjectAssign set isActive=@Active where intUserID=@User and intProjectID=@Project
+			IF(@Active = 0)
+			Begin 
+				set @Details='User -'+cast( @User as Varchar(50))+' Removed from Project -'+cast( @Project as Varchar(50))
+				EXEC ProjectManagement.dbo.sprLog 'Update', 'Project Assign', @Details, @Enroll
+				set @Msg=@UserName+' Removed form '+@ProjectName+' Successfully.'
+				set @Notify ='You have been Removed from '+@ProjectName
+				exec dbo.sprNotify @User, @Notify
+			End
+			Else
+			Begin
+				set @Details='User -'+cast( @User as Varchar(50))+' ReAssign To Project -'+cast( @Project as Varchar(50))
+				EXEC ProjectManagement.dbo.sprLog 'Update', 'Project Assign', @Details, @Enroll
+				set @Msg=@UserName+' ReAssign To '+@ProjectName+' Successfully.'
+				set @Notify ='You have been ReAssign To '+@ProjectName
+				exec dbo.sprNotify @User, @Notify
+			End
+		End
+		else IF(@ActiveState=@Active)
+		Begin
+			set @Msg='Unprocess.'
+		End
+	End
+	else IF not Exists(select * from ProjectManagement.dbo.tblProjectAssign where intUserID=@User and intProjectID=@Project)
+	Begin
+		IF(@Active=1)
+		Begin
+			insert into ProjectManagement.dbo.tblProjectAssign (intUserID, intProjectID) 
+			values (@User, @Project)
+			set @Details='User -'+cast( @User as Varchar(50))+' Assign To Project -'+cast( @Project as Varchar(50))
+			EXEC ProjectManagement.dbo.sprLog 'Insert', 'Project Assign', @Details, @Enroll
+			set @Msg=@UserName+' Assign To '+@ProjectName+' Successfully.'
+			set @Notify ='You have been Assign To '+@ProjectName
+			exec dbo.sprNotify @User, @Notify
+		End
+		Else
+		Begin
+			set @Msg='Unprocess.' 
+		End
+	End
+END
+GO
+/****** Object:  StoredProcedure [dbo].[sprCreateProject]    Script Date: 9/16/2025 1:37:29 PM ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+-- =============================================
+-- Author:		<Author,,Name>
+-- Create date: <Create Date,,>
+-- Description:	<Description,,>
+/*
+declare @msg varchar(MAX)
+exec sprCreateProject 'New Pyoourdtry6fdjttrtyrffoject',2,@msg OUTPUT
+select @msg
+*/
+-- =============================================
+CREATE PROCEDURE [dbo].[sprCreateProject]
+	@Name Varchar(200),
+	@DeadLine Date,
+	@Enroll int,
+	@Msg varchar(MAX) out
+AS
+BEGIN
+ BEGIN TRANSACTION;
+	BEGIN TRY
+		Declare @Team int= (select top 1 intTeamID FROM [ProjectManagement].[dbo].[tblTeam] where intUserID=@Enroll)
+		if(@Team is not null)
+		Begin
+			IF not EXISTS ( SELECT [strProjectName] FROM [ProjectManagement].[dbo].[tblProject] where intTeamID=@Team and strProjectName=@Name)
+			Begin
+				insert into [ProjectManagement].[dbo].[tblProject] (strProjectName,dteDeadLine,intCreatedBy,intTeamID,dteCreated,isActive,isCompleate)
+				values (@Name,@DeadLine,@Enroll,@Team,GETDATE(),1,0)
+				declare @Details varchar(MAX)='New Project Created'
+				EXEC ProjectManagement.dbo.sprLog 'Insert', 'Project Create', @Details, @Enroll
+				set @Msg='Project Created Successfully'
+				Declare @Notify varchar(MAX) ='Project Created Successfully'
+				exec dbo.sprNotify @Enroll, @Notify
+			End
+			else
+			Begin
+				set @Msg='Project already Exists!!!'
+			End
+		End
+		Else
+		Begin
+			set @Msg='You are not authorized to perform this action!!!'
+		End
+		COMMIT TRANSACTION;
+	END TRY
+ BEGIN CATCH
+        ROLLBACK TRANSACTION;
+        set @Msg= 'An error occurred: ' + ERROR_MESSAGE();
+    END CATCH;
+END
+GO
+/****** Object:  StoredProcedure [dbo].[sprcreateTask]    Script Date: 9/16/2025 1:37:29 PM ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+-- =============================================
+-- Author:		<Author,,Name>
+-- Create date: <Create Date,,>
+-- Description:	<Description,,>
+-- =============================================
+CREATE PROCEDURE [dbo].[sprcreateTask]
+	@Name Varchar(max),
+	@Description Varchar(max),
+	@ReqFrom Varchar(max),
+	@Priroty int,
+	@DeadLine date,
+	@Enroll int,
+	@Project int,
+	@Msg varchar(MAX) out
+AS
+BEGIN
+ BEGIN TRANSACTION;
+	BEGIN TRY
+	Declare @intPk int
+	Insert into ProjectManagement.dbo.tblTask (strTaskName, strDescription, strRequestFrom, intPriroty, dteDeadLine, intUserID, intProjectID)
+	values(@Name, @Description, @ReqFrom, @Priroty, @DeadLine, @Enroll, @Project)
+	set @intPk= SCOPE_IDENTITY()
+	Insert into ProjectManagement.dbo.tblTaskDetail (intTaskID, intUserID, intStatusID, tmWorking)
+	Values (@intPk, @Enroll, 2, '00:00:00')
+	declare @Details varchar(MAX)='New Task Created ID - '+cast(@intPk as varchar(100))
+	EXEC ProjectManagement.dbo.sprLog 'Insert', 'Task Create', @Details, @Enroll
+	set @Msg='Task Created Successfully'
+	Declare @Notify varchar(MAX) ='Task Created Successfully'
+	exec dbo.sprNotify @Enroll, @Notify
+COMMIT TRANSACTION;
+	END TRY
+ BEGIN CATCH
+        ROLLBACK TRANSACTION;
+        set @Msg= 'An error occurred: ' + ERROR_MESSAGE();
+    END CATCH;
+END
+GO
+/****** Object:  StoredProcedure [dbo].[sprCreateTeam]    Script Date: 9/16/2025 1:37:29 PM ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+-- =============================================
+-- Author:		<Author,,Name>
+-- Create date: <Create Date,,>
+-- Description:	<Description,,>
+-- =============================================
+CREATE PROCEDURE [dbo].[sprCreateTeam]
+	@Team varchar(200),
+	@Enroll int,
+	@Msg varchar(MAX) out
+AS
+BEGIN
+ BEGIN TRANSACTION;
+	BEGIN TRY
+		Declare @IsAdmin bit = (select top 1 isAdmin FROM ProjectManagement.dbo.tblUser where intUserID=@Enroll)
+		if(@IsAdmin = 1)
+		Begin
+			IF not EXISTS ( SELECT strTeamName FROM [ProjectManagement].[dbo].tblTeam where strTeamName=@Team)
+			Begin
+				insert into [ProjectManagement].[dbo].tblTeam (strTeamName, isActive, intUserID)
+				values (@Team,1,1)
+				declare @Details varchar(MAX)='New Team Created'
+				EXEC ProjectManagement.dbo.sprLog 'Insert', 'Team Create', @Details, @Enroll
+				set @Msg='Team Created Successfully'
+				Declare @Notify varchar(MAX) ='Task Created Successfully'
+				exec dbo.sprNotify @Enroll, @Notify
+			End
+			else
+			Begin
+				set @Msg='Team already Exists!!!'
+			End
+		End
+		Else
+		Begin
+			set @Msg='You are not authorized to perform this action!!!'
+		End
+		COMMIT TRANSACTION;
+	END TRY
+ BEGIN CATCH
+        ROLLBACK TRANSACTION;
+        set @Msg= 'An error occurred: ' + ERROR_MESSAGE();
+    END CATCH;
+END
+GO
+/****** Object:  StoredProcedure [dbo].[sprGetAllUser]    Script Date: 9/16/2025 1:37:29 PM ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+-- =============================================
+-- Author:		<Author,,Name>
+-- Create date: <Create Date,,>
+-- Description:	<Description,,>
+-- exec [sprGetAllUser] 2
+-- =============================================
+CREATE PROCEDURE [dbo].[sprGetAllUser] 
+@UserID int
+AS
+BEGIN
+	select u.intUserID, u.strUserName, u.strPhone, u.strEmail, u.intTeamID, t.strTeamName, t.intUserID as 'intBoss', cast(s.isLocked as bit) as isLocked
+	from ProjectManagement.dbo.tblUser u
+	inner join ProjectManagement.dbo.tblUserSecurity s on s.intUserID=u.intUserID
+	inner join ProjectManagement.dbo.tblTeam t on t.intTeamID=u.intTeamID
+	where u.isActive=1 and u.intUserID= case when @UserID=0 then  u.intUserID else  @UserID end
+	order by intUserID
+END
+GO
+/****** Object:  StoredProcedure [dbo].[sprGetAPIValidationProject]    Script Date: 9/16/2025 1:37:29 PM ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+-- =============================================
+-- Author:		<Author,,Name>
+-- Create date: <Create Date,,>
+-- Description:	<Description,,>
+-- =============================================
+CREATE PROCEDURE [dbo].[sprGetAPIValidationProject] 
+(
+@USERNAME varchar(50),
+@PASSWORD varchar(max)
+)
+AS
+BEGIN
+	-- SET NOCOUNT ON added to prevent extra result sets from
+	-- interfering with SELECT statements.
+	SET NOCOUNT ON;
+
+    SELECT ID, USERNAME, PASSWORD
+	from [ProjectManagement].dbo.TBLAPIACCESSPERMISSION 
+	where trim(USERNAME)=@USERNAME and trim(PASSWORD)=@PASSWORD and ISACTIVE=1
+
+END
+GO
+/****** Object:  StoredProcedure [dbo].[sprGetCompleatedTask]    Script Date: 9/16/2025 1:37:29 PM ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+-- =============================================
+-- Author:		<Author,,Name>
+-- Create date: <Create Date,,>
+-- Description:	<Description,,>
+-- exec ProjectManagement.dbo.sprGetCompleatedTask '2024-08-01' , '2024-09-05'
+-- =============================================
+CREATE PROCEDURE [dbo].[sprGetCompleatedTask]
+	@FromDate DATE,
+	@ToDate DATE
+AS
+BEGIN
+    WITH CTE_ConvertedTime AS (
+        SELECT
+            intTaskID,
+            MAX(CAST(dteInsert AS DATE)) AS dteInsertDate
+        FROM
+            ProjectManagement.dbo.tblWorkLog
+        WHERE
+            CAST(dteInsert AS DATE) BETWEEN @FromDate AND @ToDate
+        GROUP BY
+            intTaskID
+    )
+	select t.intTaskID, t.strTaskName, t.strDescription, t.strRequestFrom, p.strProjectName, u.strUserName, tm.strTeamName, s.strStatus
+	from ProjectManagement.dbo.tblTask t
+	inner join ProjectManagement.dbo.tblProject p on p.intProjectID=t.intProjectID
+	inner join ProjectManagement.dbo.tblTaskDetail td on td.intTaskID=t.intTaskID
+	inner join ProjectManagement.dbo.tblUser u on u.intUserID=td.intUserID
+	inner join ProjectManagement.dbo.tblTeam tm on tm.intTeamID=u.intTeamID
+	inner join ProjectManagement.dbo.tblStatus s on s.intStatusID=td.intStatusID
+	inner join CTE_ConvertedTime ct on ct.intTaskID=t.intTaskID
+	where s.intStatusID in (5,6)
+	order by intTaskID
+END
+GO
+/****** Object:  StoredProcedure [dbo].[sprGetNotify]    Script Date: 9/16/2025 1:37:29 PM ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+-- =============================================
+-- Author:		<Author,,Name>
+-- Create date: <Create Date,,>
+-- Description:	<Description,,>
+-- =============================================
+CREATE PROCEDURE [dbo].[sprGetNotify]
+	@Enroll int
+AS
+BEGIN
+	Declare @Count int=15
+	Declare @Temp table(ID int, Msg varchar(MAX), isNew bit)
+
+	insert into @Temp
+	SELECT TOP (@Count) intID, strMsg, 1
+	FROM ProjectManagement.dbo.tblNotification
+	where intUserID=@Enroll and isSent=0 or isSent= NULL
+	order by intID desc
+
+	Declare @RowCount int= (select count(*) from @Temp)
+
+	if(@Count-@RowCount!=0)
+	Begin
+		insert into @Temp
+		SELECT TOP (@Count-@RowCount) intID, strMsg, 0
+		FROM ProjectManagement.dbo.tblNotification
+		where intUserID=@Enroll and isSent=1
+		order by intID desc
+	End
+	update ProjectManagement.dbo.tblNotification set isSent=1 where intID in (select ID from @Temp)
+	select * from @Temp
+END
+GO
+/****** Object:  StoredProcedure [dbo].[sprGetProjectByUser]    Script Date: 9/16/2025 1:37:29 PM ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+-- =============================================
+-- Author:		<Author,,Name>
+-- Create date: <Create Date,,>
+-- Description:	<Description,,>
+-- Exec sprGetProjectByUser 1, 1
+-- =============================================
+CREATE PROCEDURE [dbo].[sprGetProjectByUser]
+	@User int,
+	@Type int
+AS
+BEGIN
+	IF(@Type=1)
+	Begin
+		select 0 as intProjectID,'All' as strProjectName, '2025-1-1' as dteDeadLine, CAST(0 AS bit) as isCompleate, '0' as Lenght, '0' as UserCount, '0' as TaskCount
+		UNION ALL
+		select p.intProjectID,p.strProjectName, p.dteDeadLine, p.isCompleate, (SELECT dbo.funAgging(a.dteAssign)) as Lenght, (SELECT dbo.funUserAssigntoProject(p.intProjectID)) as UserCount, (SELECT dbo.funTaskPerProjectByUser(p.intProjectID, a.intUserID)) as TaskCount
+		from ProjectManagement.dbo.tblProjectAssign a 
+		inner join ProjectManagement.dbo.tblProject p on p.intProjectID=a.intProjectID
+		where p.isActive=1 and a.isActive=1 and a.intUserID=@User
+		order by dteDeadLine
+	END
+	ELSE
+	BEGIN
+		select p.intProjectID,p.strProjectName, p.dteDeadLine, p.isCompleate, (SELECT dbo.funAgging(a.dteAssign)) as Lenght, (SELECT dbo.funUserAssigntoProject(p.intProjectID)) as UserCount, (SELECT dbo.funTaskPerProjectByUser(p.intProjectID, a.intUserID)) as TaskCount
+		from ProjectManagement.dbo.tblProjectAssign a 
+		inner join ProjectManagement.dbo.tblProject p on p.intProjectID=a.intProjectID
+		where p.isActive=1 and a.isActive=1 and a.intUserID=@User
+		order by p.dteDeadLine
+	END
+END
+GO
+/****** Object:  StoredProcedure [dbo].[sprGetProjectsByTeam]    Script Date: 9/16/2025 1:37:29 PM ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+-- =============================================
+-- Author:		<Author,,Name>
+-- Create date: <Create Date,,>
+-- Description:	<Description,,>
+-- exec sprGetProjectsByTeam 2,2
+-- =============================================
+CREATE PROCEDURE [dbo].[sprGetProjectsByTeam]
+	@Team int,
+	@intEnroll int
+AS
+BEGIN
+	declare @Temp table(intProjectID int, strProjectName varchar(Max), dteDeadLine date,isCompleate bit, DaysPassed varchar(200), UserCount int)
+	insert into @Temp
+		SELECT [intProjectID]
+		  ,[strProjectName]
+		  ,[dteDeadLine]
+		  ,isCompleate
+		  ,cast((SELECT dbo.funAgging(dteCreated)) as varchar(200)) AS DaysPassed
+		  ,(SELECT dbo.funUserAssigntoProject(intProjectID))
+		FROM [ProjectManagement].[dbo].[tblProject]
+	where intTeamID=@Team and isActive=1
+	select * from @Temp order by intProjectID
+END
+GO
+/****** Object:  StoredProcedure [dbo].[sprGetRequestList]    Script Date: 9/16/2025 1:37:29 PM ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+-- =============================================
+-- Author:		<Author,,Name>
+-- Create date: <Create Date,,>
+-- Description:	<Description,,>
+-- exec sprGetRequestList 2,1
+-- =============================================
+CREATE PROCEDURE [dbo].[sprGetRequestList]
+	@Enroll int,
+	@isSuperviser bit
+AS
+BEGIN
+	if(@isSuperviser=0)
+	Begin
+		SELECT r.intID, u.strUserName, p.strProjectName, case when r.intStatusID=7 then 'Meeting' when r.intStatusID=8 then 'Emergency Support' else 'Undefined' end as 'Type', r.strTaskName, r.strDescription, r.strRequestFrom, r.dteCreated, r.strFrom, r.strTo, r.tmWorking
+		FROM ProjectManagement.dbo.tblRequest r
+		inner join ProjectManagement.dbo.tblUser u on u.intUserID=r.intUserID
+		inner join ProjectManagement.dbo.tblProject p  on p.intProjectID=r.intProjectID
+		where u.intUserID=@Enroll and r.isAction is null
+		order by r.intID
+	End
+	else if(@isSuperviser=1)
+	Begin
+		SELECT r.intID, u.strUserName, p.strProjectName, case when r.intStatusID=7 then 'Meeting' when r.intStatusID=8 then 'Emergency Support' else 'Undefined' end as 'Type', r.strTaskName, r.strDescription, r.strRequestFrom, r.dteCreated, r.strFrom, r.strTo, r.tmWorking
+		FROM ProjectManagement.dbo.tblRequest r
+		inner join ProjectManagement.dbo.tblUser u on u.intUserID=r.intUserID
+		inner join ProjectManagement.dbo.tblProject p  on p.intProjectID=r.intProjectID
+		inner join ProjectManagement.dbo.tblTeam t on t.intTeamID= u.intTeamID
+		where t.intUserID=@Enroll and r.isAction is null
+		order by u.strUserName, r.intID
+	End
+END
+GO
+/****** Object:  StoredProcedure [dbo].[sprGetStepByTask]    Script Date: 9/16/2025 1:37:29 PM ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+-- =============================================
+-- Author:		<Author,,Name>
+-- Create date: <Create Date,,>
+-- Description:	<Description,,>
+-- =============================================
+CREATE PROCEDURE [dbo].[sprGetStepByTask] 
+	@intTaskID int
+AS
+BEGIN
+	select intStepId, strStep, intTaskID, isDone
+	from ProjectManagement.dbo.tblSteps
+	where intTaskID=@intTaskID
+END
+GO
+/****** Object:  StoredProcedure [dbo].[sprGetTaskByUser]    Script Date: 9/16/2025 1:37:29 PM ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+-- =============================================
+-- Author:		<Author,,Name>
+-- Create date: <Create Date,,>
+-- Description:	<Description,,>
+-- =============================================
+CREATE PROCEDURE [dbo].[sprGetTaskByUser]
+	@User int,
+	@Status int
+AS
+BEGIN
+	IF(@Status=5)
+	Begin
+		with WLog AS(
+			select intTaskID, MAX(dteInsert) as LastWorkTime
+			from ProjectManagement.dbo.tblWorkLog
+			group by intTaskID
+			)
+		select t.intTaskID, t.strTaskName, t.strDescription, t.strRequestFrom, t.intPriroty, t.dteDeadLine, td.tmWorking, CAST(DATEDIFF(DAY, t.dteCreated, GETDATE()) AS VARCHAR) + ' days ' + CAST(DATEDIFF(HOUR, t.dteCreated, GETDATE()) % 24 AS VARCHAR) + ' hours' AS Agging, p.strProjectName
+		from ProjectManagement.dbo.tblTaskDetail td
+		inner join ProjectManagement.dbo.tblTask t on t.intTaskID=td.intTaskID
+		inner join ProjectManagement.dbo.tblProject p on p.intProjectID=t.intProjectID
+		inner join WLog on WLog.intTaskID=t.intTaskID
+		where td.intUserID=@User and td.intStatusID=@Status and WLog.LastWorkTime between DATEADD(MONTH,-1,GETDATE()) and GETDATE()
+		order by WLog.LastWorkTime desc
+	End
+	Else
+	Begin
+		select t.intTaskID, t.strTaskName, t.strDescription, t.strRequestFrom, t.intPriroty, t.dteDeadLine, td.tmWorking, CAST(DATEDIFF(DAY, t.dteCreated, GETDATE()) AS VARCHAR) + ' days ' + CAST(DATEDIFF(HOUR, t.dteCreated, GETDATE()) % 24 AS VARCHAR) + ' hours' AS Agging, p.strProjectName
+		from ProjectManagement.dbo.tblTaskDetail td
+		inner join ProjectManagement.dbo.tblTask t on t.intTaskID=td.intTaskID
+		inner join ProjectManagement.dbo.tblProject p on p.intProjectID=t.intProjectID
+		where td.intUserID=@User and td.intStatusID=@Status
+		order by t.intPriroty desc, t.dteDeadLine, t.intTaskID
+	End
+END
+GO
+/****** Object:  StoredProcedure [dbo].[sprGetTeam]    Script Date: 9/16/2025 1:37:29 PM ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+-- =============================================
+-- Author:		<Author,,Name>
+-- Create date: <Create Date,,>
+-- Description:	<Description,,>
+-- =============================================
+CREATE PROCEDURE [dbo].[sprGetTeam]
+AS
+BEGIN
+	select intTeamID,strTeamName
+	from ProjectManagement.dbo.tblTeam
+	where isActive=1
+END
+GO
+/****** Object:  StoredProcedure [dbo].[sprGetUserPerProject]    Script Date: 9/16/2025 1:37:29 PM ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+-- =============================================
+-- Author:		<Author,,Name>
+-- Create date: <Create Date,,>
+-- Description:	<Description,,>
+-- =============================================
+CREATE PROCEDURE [dbo].[sprGetUserPerProject]
+	@Team int,
+	@Project int
+AS
+BEGIN
+	select u.intUserID, p.intProjectID, u.strUserName, ISNULL(a.isActive,0) as isActive
+	from ProjectManagement.dbo.tblProject p
+	inner join ProjectManagement.dbo.tblUser u on u.intTeamID=p.intTeamID and u.isActive=1
+	left join ProjectManagement.dbo.tblProjectAssign a on a.intUserID=u.intUserID and a.intProjectID=p.intProjectID and a.isActive=1
+	where p.intTeamID=@Team and p.intProjectID=@Project and u.isActive=1
+END
+GO
+/****** Object:  StoredProcedure [dbo].[SPRINSERTEMPDATA]    Script Date: 9/16/2025 1:37:29 PM ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+-- =============================================
+-- Author:		<Author,,Name>
+-- Create date: <Create Date,,>
+-- Description:	<Description,,>
+-- exec SPRINSERTEMPDATA 'a','a','a','a','a'
+-- =============================================
+CREATE PROCEDURE [dbo].[SPRINSERTEMPDATA]
+    @strEmpName       VARCHAR(200),
+    @strEmpOfficeMail VARCHAR(50),
+    @strEmpContactNo  VARCHAR(16),
+    @strEmpAddress    VARCHAR(500),
+    @strEmpNID        VARCHAR(500)
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+    INSERT INTO Test_DB_P.DBO.TBLEMPLOYEE
+        ([strEmpName],
+         [strEmpOfficeMail],
+         [strEmpContactNo],
+         [strEmpAddress],
+         [strEmpNID])
+    VALUES
+        (@strEmpName,
+         @strEmpOfficeMail,
+         @strEmpContactNo,
+         @strEmpAddress,
+         @strEmpNID);
+
+    DECLARE @NewID INT = SCOPE_IDENTITY();
+    DECLARE @EmpCode VARCHAR(10) = 'EMP' + RIGHT('000' + CAST(@NewID AS VARCHAR), 3);
+
+    UPDATE Test_DB_P.DBO.TBLEMPLOYEE
+    SET strEmployeeCode = @EmpCode
+    WHERE intID = @NewID;
+	DECLARE @Message NVARCHAR(50);
+	set @Message = 'Successfully Register. Employee Code '+@EmpCode
+    SELECT
+       intID AS ID,
+       strEmpName AS EmpName,
+       strEmpOfficeMail AS EmpOfficeEmail,
+       strEmpContactNo AS EmpContactNo,
+       strEmpAddress AS EmpAddress,
+       strEmpNID AS EmpNID,
+       strEmployeeCode AS EmpCode,
+	   @Message as Message
+    FROM Test_DB_P.DBO.TBLEMPLOYEE
+    WHERE intID = @NewID;
+END
+
+GO
+/****** Object:  StoredProcedure [dbo].[sprLog]    Script Date: 9/16/2025 1:37:29 PM ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+-- =============================================
+-- Author:		<Author,,Name>
+-- Create date: <Create Date,,>
+-- Description:	<Description,,>
+-- =============================================
+CREATE PROCEDURE [dbo].[sprLog]
+	@Type Varchar(200),
+	@Process Varchar(500),
+	@Description Varchar(Max),
+	@IntUserID Int
+AS
+BEGIN
+  Insert into [ProjectManagement].[dbo].[tblActivityLog] (strType,strProcess,strDescription,intActionBy) values (@Type,@Process,@Description,@IntUserID)
+END
+GO
+/****** Object:  StoredProcedure [dbo].[sprNotify]    Script Date: 9/16/2025 1:37:29 PM ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+-- =============================================
+-- Author:		<Author,,Name>
+-- Create date: <Create Date,,>
+-- Description:	<Description,,>
+-- Exec [dbo].[sprNotify] 1, 'Hi'
+-- =============================================
+CREATE PROCEDURE [dbo].[sprNotify]
+	@User int,
+	@Msg varchar(MAX)
+AS
+BEGIN
+	insert into ProjectManagement.dbo.tblNotification (intUserID, strMsg)
+	values (@User, @Msg)
+END
+GO
+/****** Object:  StoredProcedure [dbo].[sprPendingReport]    Script Date: 9/16/2025 1:37:29 PM ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+-- =============================================
+-- Author:		<Author,,Name>
+-- Create date: <Create Date,,>
+-- Description:	<Description,,>
+-- exec dbo.sprPendingReport 1
+-- =============================================
+CREATE PROCEDURE [dbo].[sprPendingReport]
+	@User int
+AS
+BEGIN
+	WITH CTE_ConvertedTime AS (
+		SELECT
+			intUserID,
+			intTaskID,
+			CAST(dteInsert AS DATE) AS dteInsertDate,
+			DATEDIFF(SECOND, '00:00:00', tmWorking) AS WorkingSeconds
+		FROM
+			ProjectManagement.dbo.tblWorkLog
+		),
+		CTE_SumTime AS (
+			SELECT
+				intUserID,
+				intTaskID,
+				SUM(WorkingSeconds) AS TotalWorkingSeconds
+			FROM
+				CTE_ConvertedTime
+			GROUP BY
+				intUserID,
+				intTaskID
+		)
+	select t.intTaskID, p.strProjectName, t.strTaskName, t.strDescription, s.strStatus, ISNULL(CONVERT(TIME, DATEADD(SECOND, sp.TotalWorkingSeconds, '00:00:00')), '00:00:00') AS tmWorking, t.intPriroty, t.dteDeadLine, t.dteCreated, t.strRequestFrom
+	from ProjectManagement.dbo.tblTask t 
+	inner join ProjectManagement.dbo.tblTaskDetail td on td.intTaskID=t.intTaskID
+	inner join ProjectManagement.dbo.tblStatus s on s.intStatusID=td.intStatusID
+	inner join ProjectManagement.dbo.tblProject p on p.intProjectID=t.intProjectID
+	left join CTE_SumTime sp on sp.intTaskID=t.intTaskID and sp.intUserID=td.intUserID
+	where td.intUserID=@User and s.intStatusID in (1,2,3,4)
+END
+GO
+/****** Object:  StoredProcedure [dbo].[sprRegistration]    Script Date: 9/16/2025 1:37:29 PM ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+-- =============================================
+-- Author:		<Author,,Name>
+-- Create date: <Create Date,,>
+-- Description:	<Description,,>
+-- exec [dbo].[sprRegistration] '13Subrato@akijbashir.com','New User','01779951164','NewUSer',1,0
+-- =============================================
+CREATE PROCEDURE [dbo].[sprRegistration]
+	@user varchar(200),
+	@Name varchar(200),
+	@Phone varchar(20),
+	@Key varchar(MAX),
+	@team int,
+	@Enroll int
+AS
+BEGIN
+if(@user like '%_@__%.__%')
+begin
+	Begin try
+	Begin Transaction
+	DECLARE @Return TABLE (
+		UserID INT,
+		UserName VARCHAR(255),
+		Phone VARCHAR(20),
+		Email VARCHAR(255),
+		TeamID INT,
+		TeamName VARCHAR(255),
+		ISBoss BIT,
+		ISAdmin BIT,
+		Token VARCHAR(255),
+		Response VARCHAR(255));
+	IF EXISTS(select * from ProjectManagement.dbo.tblUser where strEmail=@user)
+	BEGIN
+		Insert into @Return  Values(0,'Name','Phone','Email',0,0,0,0,'','User Already Exists !!!')
+		--insert into @Return exec [dbo].[sprSecurityCheck] 0, 'Subrato@akijbashir.com','Test','1234' 
+	END
+	ELSE
+	BEGIN
+		Declare @Userpass varbinary(max)= HASHBYTES('SHA2_512',@Key+cast('{Task}' as varchar(20)))
+		Insert into ProjectManagement.dbo.tblUser (strUserName,strPhone,strEmail,intTeamID,isActive,isAdmin)
+		values (@Name,@Phone,@user,@team,1,0)
+		Declare @UserID int=SCOPE_IDENTITY()
+		insert into ProjectManagement.dbo.tblUserSecurity (intUserID,strKey,dteValidTo,intFailedAttamped)
+		values (@UserID,@Userpass,DATEADD(MONTH,1,GETDATE()),0)
+		DECLARE @Details varchar(MAX) = 'User Enlisted USer ID-' + CAST(@UserID AS VARCHAR(50));
+		set @Enroll=CASE WHEN @Enroll = 0 THEN @UserID ELSE CAST(@Enroll AS NVARCHAR(50)) END;
+		EXEC ProjectManagement.dbo.sprLog 'Insert', 'User Registrassion', @Details, @Enroll
+		insert into @Return exec [dbo].[sprSecurityCheck] 0, @user,@Key,'1234' 
+		Declare @Notify varchar(MAX) ='WellCome to Project Management'
+		exec dbo.sprNotify @Enroll, @Notify
+	END
+	Commit
+	Select * From @Return
+	End try
+	Begin Catch
+		Rollback
+		Insert into @Return  Values(0,'Name','Phone','Email',0,0,0,0,'','DB_Error:'+ ERROR_MESSAGE())
+		select * from @Return
+	End Catch
+END
+END
+GO
+/****** Object:  StoredProcedure [dbo].[sprRequestEntry]    Script Date: 9/16/2025 1:37:29 PM ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+-- =============================================
+-- Author:		<Author,,Name>
+-- Create date: <Create Date,,>
+-- Description:	<Description,,>
+-- =============================================
+CREATE PROCEDURE [dbo].[sprRequestEntry]
+	@TaskName varchar(200),
+	@strDescription varchar(500),
+	@strRequestFrom varchar(200),
+	@intUserID int,
+	@intProjectID int,
+	@dteDate DateTime,
+	@intStatusID int,
+	@tmWorking time,
+	@From varchar(200),
+	@To varchar(200),
+	@Msg varchar(MAX) out
+
+AS
+BEGIN
+	Begin try
+	Begin Transaction
+		insert into ProjectManagement.dbo.tblRequest (strTaskName, strDescription, strRequestFrom, intUserID, intProjectID, dteCreated, intStatusID, tmWorking, strFrom, strTo)
+		Values (@TaskName, @strDescription, @strRequestFrom, @intUserID, @intProjectID, @dteDate, @intStatusID, @tmWorking, @From, @To)
+		EXEC ProjectManagement.dbo.sprLog 'Insert', 'Request Create', '', @intUserID
+		set @Msg='Request Initiated Successfully!!!'
+		Declare @Notify varchar(MAX) ='Request Initiated Successfully'
+		exec dbo.sprNotify @intUserID, @Notify
+	Commit
+	End try
+	Begin Catch
+		Rollback
+		set @Msg='Sorry there was an error'
+	End Catch
+END
+GO
+/****** Object:  StoredProcedure [dbo].[sprRequetAction]    Script Date: 9/16/2025 1:37:29 PM ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+-- =============================================
+-- Author:		<Author,,Name>
+-- Create date: <Create Date,,>
+-- Description:	<Description,,>
+-- =============================================
+CREATE PROCEDURE [dbo].[sprRequetAction]
+	@RequestID int,
+	@Enroll int,
+	@Type int,
+	@Msg varchar(MAX) out
+AS
+BEGIN
+ BEGIN TRANSACTION;
+	BEGIN TRY
+	declare @Details varchar(max)
+	Declare @Notify varchar(MAX), @TaskName varchar(MAX)
+	set @TaskName =(select top 1 strTaskName from ProjectManagement.dbo.tblRequest where intID=@RequestID)
+	if(@Type=1)
+	Begin
+
+		insert into ProjectManagement.dbo.tblTask (strTaskName, strDescription, strRequestFrom, intPriroty, dteDeadLine, intUserID, dteCreated, intProjectID)
+		select strTaskName, strDescription, strRequestFrom, 3, dteCreated, intUserID, dteCreated, intProjectID 
+		from ProjectManagement.dbo.tblRequest where intID=@RequestID
+
+		Declare @TaskID int=SCOPE_IDENTITY()
+
+		insert into ProjectManagement.dbo.tblTaskDetail (intTaskID ,intUserID ,intStatusID ,tmWorking)
+		select  @TaskID, intUserID, intStatusID, tmWorking 
+		from ProjectManagement.dbo.tblRequest where intID=@RequestID
+
+
+		insert into ProjectManagement.dbo.tblWorkLog (dteInsert, intUserID, tmWorking, intStatusID, intTaskID)
+		select  dteCreated, intUserID, tmWorking, intStatusID, @TaskID
+		from ProjectManagement.dbo.tblRequest where intID=@RequestID
+
+		update ProjectManagement.dbo.tblRequest set isAction=1, dteAction=GETDATE(), intTaskID=@TaskID where intID=@RequestID
+
+		set @Details='Request Approved ID - '+cast(@RequestID as varchar(100))
+		EXEC ProjectManagement.dbo.sprLog 'Insert & Update', 'Request Approve', @Details, @Enroll
+		
+		set @Msg='Request Approved Successfully'
+		set @Notify = @TaskName+' Request have been approved.'
+		exec dbo.sprNotify @Enroll, @Notify
+
+	End
+	else if(@Type=2)
+	Begin
+
+		update ProjectManagement.dbo.tblRequest set isAction=0, dteAction=GETDATE() where intID=@RequestID
+
+		set @Details='Request Reject ID - '+cast(@RequestID as varchar(100))
+		EXEC ProjectManagement.dbo.sprLog 'Update', 'Request Reject', @Details, @Enroll
+		set @Msg='Request Rejected Successfully'
+		set @Notify = @TaskName+' Request have been Rejected.'
+		exec dbo.sprNotify @Enroll, @Notify
+	End
+	else
+	Begin
+		set @Msg='Sorry There wasn an error!!!'
+	End
+COMMIT TRANSACTION;
+	END TRY
+ BEGIN CATCH
+        ROLLBACK TRANSACTION;
+        set @Msg= 'An error occurred: ' + ERROR_MESSAGE();
+    END CATCH;
+END
+GO
+/****** Object:  StoredProcedure [dbo].[sprSecurityCheck]    Script Date: 9/16/2025 1:37:29 PM ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+-- =============================================
+-- Author:		<Author,,Name>
+-- Create date: <Create Date,,>
+-- Description:	<Description,,>
+--exec [dbo].[sprSecurityCheck] 2,'subrato@akijbashir.com','Sub@2024','mMEAku'
+-- =============================================
+CREATE PROCEDURE [dbo].[sprSecurityCheck] 
+	@type int,
+	@Email varchar(200),
+	@password varchar(200),
+	@code Varchar(200)
+AS
+BEGIN
+if(@Email like '%_@__%.__%')
+begin
+	Begin try
+	Begin Transaction
+	DECLARE @Return TABLE (
+		UserID INT,
+		UserName VARCHAR(255),
+		Phone VARCHAR(20),
+		Email VARCHAR(255),
+		TeamID INT,
+		TeamName VARCHAR(255),
+		ISBoss BIT,
+		ISAdmin BIT,
+		Token VARCHAR(255),
+		Response VARCHAR(255));
+	declare @count int,@UserID int
+	if exists( select 1 from ProjectManagement.dbo.tblUser where strEmail= @Email) 
+	Begin 
+		set @count= (select count(*) from ProjectManagement.dbo.tblUser where strEmail= @Email)
+		IF(@count!=1)
+		Begin
+			insert into @Return values(0,'Name','Phone','Email',0,'Team',0,0,'','Invalid Credantial')
+		End
+		else
+		Begin
+			Set @UserID=(select top 1 intUserID from ProjectManagement.dbo.tblUser where strEmail= @Email)
+			IF exists(select 1 from ProjectManagement.dbo.tblUser where intUserID= @UserID and isActive=0)
+			Begin
+				insert into @Return values(0,'Name','Phone','Email',0,'Team',0,0,'','Sorry, you are no longer authorized to access this service')
+			End
+			Else 
+			Begin
+				IF(@type=0) --LogIn
+			Begin
+				IF((select top 1 dteValidTo from ProjectManagement.dbo.tblUserSecurity where intUserID=@UserID)<GETDATE())
+				BEGIN
+					insert into @Return values(0,'Name','Phone','Email',0,'Team',0,0,'','Password Expaired !!!')
+				END
+				ELSE IF((select top 1 isLocked from ProjectManagement.dbo.tblUserSecurity where intUserID=@UserID)=1)
+				BEGIN
+					insert into @Return values(0,'Name','Phone','Email',0,'Team',0,0,'','Your Account is locked !!!')
+				END
+				Else
+				Begin
+					Declare @Userpass varbinary(max)= HASHBYTES('SHA2_512',@password+cast('{Task}' as varchar(20)) )
+					Declare @DBpass varbinary(max) = isnull((select top (1) strKey from ProjectManagement.dbo.tblUserSecurity where intUserID = @UserID ), cast('NDOTP' as varbinary))
+					IF(@Userpass!=@DBpass)
+					Begin 
+						Update  ProjectManagement.dbo.tblUserSecurity set intFailedAttamped=intFailedAttamped+1 where intUserID=@UserID
+						insert into @Return values(0,'Name','Phone','Email',0,'Team',0,0,'','Invalid Credantial')
+					End
+					Else
+					Begin
+						insert into @Return 
+						select u.intUserID, u.strUserName, u.strPhone, u.strEmail, t.intTeamID, t.strTeamName, case when t.intUserID=u.intUserID then 1 else 0 end, u.isAdmin, '', 'GO'
+						from ProjectManagement.dbo.tblUser u
+						inner join ProjectManagement.dbo.tblTeam t on t.intTeamID=u.intTeamID
+						where u.intUserID=@UserID
+					End
+				End
+			End
+			Else IF(@type=1)
+			Begin
+				DECLARE @Key VARCHAR(50)
+				SET @Key = ''
+				SELECT TOP 6 @Key = @Key + [char]
+					FROM [dbo].[tblRandomCharsHelper]
+					ORDER BY NEWID()
+				Insert Into ProjectManagement.dbo.tblSecurityCheck (intUserID,strOTP) values(@UserID,@Key)
+				insert into @Return values(0,'Name','Phone','Email',0,'Team',0,0,'','Otp send to :'+(select top 1 strPhone from ProjectManagement.dbo.tblUser where intUserID= @UserID))
+				EXEC ProjectManagement.dbo.sprLog 'Insert', 'OTP Request', 'OTP Request', @UserID
+			End
+			Else IF(@type=2)
+			Begin
+				Declare @OTP varchar(20),@intOtpId int
+				select top 1 @OTP=strOTP, @intOtpId=intId from  ProjectManagement.dbo.tblSecurityCheck where intUserID=@UserID and GETDATE() between dteInsertTime and dteExpTime and isUsed=0 order by intId desc
+				IF(@OTP=@code)
+				Begin
+					Declare @pass varbinary(max)= HASHBYTES('SHA2_512',@password+cast('{Task}' as varchar(20)) )
+					Update ProjectManagement.dbo.tblUserSecurity set strKey=@pass, dteValidTo=DATEADD(MONTH,1,GETDATE()) where intUserID=@UserID
+					Update ProjectManagement.dbo.tblSecurityCheck set isUsed=1 where intId=@intOtpId
+					EXEC ProjectManagement.dbo.sprLog 'Update', 'Password Reset', 'Password Reset Successfully', @UserID
+					insert into @Return values(0,'Name','Phone','Email',0,'Team',0,0,'','Password Updated Successfully')
+				End
+				Else
+				Begin
+					insert into @Return values(0,'Name','Phone','Email',0,'Team',0,0,'','Otp dose not Match !!!')
+				End
+			End
+			END
+		End
+	End
+	Else
+	Begin
+		insert into @Return values(0,'Name','Phone','Email',0,'Team',0,0,'','Invalid Credantial')
+	End
+	Commit
+	select * from @Return
+	End try
+	Begin Catch
+		Rollback
+		Insert into @Return (Response) Values('DB_Error:'+ ERROR_MESSAGE())
+		select * from @Return
+	End Catch
+END
+END
+GO
+/****** Object:  StoredProcedure [dbo].[sprtaskManager]    Script Date: 9/16/2025 1:37:29 PM ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+-- =============================================
+-- Author:		<Author,,Name>
+-- Create date: <Create Date,,>
+-- Description:	<Description,,>
+-- =============================================
+CREATE PROCEDURE [dbo].[sprtaskManager]
+	@Type int,
+	@TaskID int,
+	@User int,
+	@Status int,
+	@tmTime time,
+	@Enroll int,
+	@Msg varchar(MAX) out
+AS
+BEGIN
+BEGIN TRANSACTION;
+	BEGIN TRY
+
+	Declare @Details varchar(max)
+	Declare @NewTime time = (select top 1 tmWorking from ProjectManagement.dbo.tblTaskDetail where intTaskID=@TaskID)
+	set @NewTime= convert(time,convert(datetime,@NewTime)+convert(datetime,@tmTime))
+	IF(@Type=0) --Status and time Update
+	Begin
+		if exists(select * from ProjectManagement.dbo.tblTaskDetail where intStatusID=1 and intUserID=@Enroll and intTaskID!=@TaskID and @Status=1)
+		Begin
+			set @Msg='Please finish the current task at hand!!!'
+		End
+		Else
+		Begin
+			Update  ProjectManagement.dbo.tblTaskDetail set tmWorking=@NewTime, intStatusID=@Status where intTaskID=@TaskID
+			exec ProjectManagement.dbo.sprWorkLog @Enroll, @tmTime, @Status, @TaskID
+			set @Details='Task Status Change ID- '+cast(@TaskID as varchar(100))
+			EXEC ProjectManagement.dbo.sprLog 'Update', 'Status and Time Change', @Details, @Enroll
+			set @Msg='Status Updated Successfully.'
+		End
+	End
+	Else IF(@Type=1) --Transfer and time Update
+	Begin
+		Update  ProjectManagement.dbo.tblTaskDetail set tmWorking=@NewTime, intStatusID=2, intUserID=@User where intTaskID=@TaskID
+		exec ProjectManagement.dbo.sprWorkLog @Enroll, @tmTime, 2, @TaskID
+		set @Details='Task Transfer ID- '+cast(@TaskID as varchar(100))+' Transfer to -'+cast(@User as varchar(100))
+		EXEC ProjectManagement.dbo.sprLog 'Update', 'Status, Transfer and Time Change', @Details, @Enroll
+		set @Msg='Task Transfer Successfully.'
+		Declare @TaskName varchar(500)=(select top 1 strTaskName from ProjectManagement.dbo.tblTask where intTaskID=@TaskID)
+		Declare @Notify varchar(MAX) =@TaskName+' Transfered to you.'
+		exec dbo.sprNotify @User, @Notify
+	End
+
+	COMMIT TRANSACTION;
+	END TRY
+ BEGIN CATCH
+        ROLLBACK TRANSACTION;
+        set @Msg= 'An error occurred: ' + ERROR_MESSAGE();
+    END CATCH;
+END
+
+GO
+/****** Object:  StoredProcedure [dbo].[sprTransferCheck]    Script Date: 9/16/2025 1:37:29 PM ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+-- =============================================
+-- Author:		<Author,,Name>
+-- Create date: <Create Date,,>
+-- Description:	<Description,,>
+-- Exec sprTransferCheck 1379, 1
+-- =============================================
+CREATE PROCEDURE [dbo].[sprTransferCheck] 
+	@Task int,
+	@user int
+AS
+BEGIN
+	Declare @Project int=(select top 1 intProjectID from ProjectManagement.dbo.tblTask where intTaskID=@Task)
+	select u.intUserID, u.strUserName 
+	from ProjectManagement.dbo.tblProjectAssign a
+	inner join ProjectManagement.dbo.tblUser u on u.intUserID=a.intUserID and u.isActive=1 and a.isActive=1
+	where intProjectID=@Project and u.intUserID!=@user
+END
+GO
+/****** Object:  StoredProcedure [dbo].[sprUpdateProjectStatus]    Script Date: 9/16/2025 1:37:29 PM ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+-- =============================================
+-- Author:		<Author,,Name>
+-- Create date: <Create Date,,>
+-- Description:	<Description,,>
+/*
+declare @msg varchar(MAX)
+exec sprUpdateProjectStatus 1,2,2,@msg OUTPUT
+select @msg
+*/
+-- =============================================
+CREATE PROCEDURE [dbo].[sprUpdateProjectStatus]
+	@Type int,
+	@intProject int,
+	@Enroll int,
+	@Msg varchar(MAX) out
+AS
+BEGIN
+ BEGIN TRANSACTION;
+	BEGIN TRY
+	Declare @Details varchar(MAX)
+	IF(@Type=0)
+	Begin
+		Update [ProjectManagement].[dbo].[tblProject] set isActive=0 where intProjectID=@intProject
+		set @Details ='Project - '+cast( @intProject as Varchar(50))+' is being inactive'
+		EXEC ProjectManagement.dbo.sprLog 'Update', 'Project Active Status updated to 0', @Details, @Enroll
+		set @Msg='Project Removed Successfully!!!'
+	End
+	else IF(@Type=1)
+	Begin
+		Declare @ststus bit= (select isCompleate from [ProjectManagement].[dbo].[tblProject] where intProjectID=@intProject)
+		Declare @Updatedststus bit
+		if(@ststus=1)
+		Begin 
+			set @Updatedststus=0
+		End
+		else 
+		Begin 
+			set @Updatedststus=1
+		End
+		Update [ProjectManagement].[dbo].[tblProject] set isCompleate=@Updatedststus where intProjectID=@intProject
+		set @Details ='Project - '+cast( @intProject as Varchar(50))+' compleate status is being -'+cast( @Updatedststus as Varchar(50))
+		EXEC ProjectManagement.dbo.sprLog 'Update', 'Project Compleate Status updated' , @Details, @Enroll
+		set @Msg='Project Updated Successfully!!!'
+	End
+	COMMIT TRANSACTION;
+	END TRY
+ BEGIN CATCH
+        ROLLBACK TRANSACTION;
+        set @Msg= 'An error occurred: ' + ERROR_MESSAGE();
+    END CATCH;
+END
+GO
+/****** Object:  StoredProcedure [dbo].[sprUpdateStep]    Script Date: 9/16/2025 1:37:29 PM ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+-- =============================================
+-- Author:		<Author,,Name>
+-- Create date: <Create Date,,>
+-- Description:	<Description,,>
+-- =============================================
+CREATE PROCEDURE [dbo].[sprUpdateStep] 
+	@type int,
+	@Step varchar(500),
+	@isDone bit,
+	@StepID int,
+	@Enroll int,
+	@Msg varchar(MAX) out
+AS
+BEGIN
+ BEGIN TRANSACTION;
+	BEGIN TRY
+	Declare @Details varchar(max)
+	IF(@type=0)
+	Begin
+		update ProjectManagement.dbo.tblSteps set isDone=@isDone where intStepId=@StepID
+		set @Details='Step Status Change ID- '+cast(@StepID as varchar(100))
+		EXEC ProjectManagement.dbo.sprLog 'Update', 'Step Status Change', @Details, @Enroll
+		set @Msg='Step Updated Successfully.'
+	End
+	ELSE IF(@type=1)
+	Begin
+		update ProjectManagement.dbo.tblSteps set strStep=@Step where intStepId=@StepID
+		set @Details='Step Name Change ID- '+cast(@StepID as varchar(100))
+		EXEC ProjectManagement.dbo.sprLog 'Update', 'Step Name Change', @Details, @Enroll
+		set @Msg='Step Updated Successfully.'
+	End
+	ELSE IF(@type=2)
+	Begin
+		insert into ProjectManagement.dbo.tblSteps (strStep, intTaskID, isDone)
+		Values (@Step, @StepID, @isDone)
+		set @Details='Step Created ID- '+cast(SCOPE_IDENTITY() as varchar(100))
+		EXEC ProjectManagement.dbo.sprLog 'Insert', 'Step Insert', @Details, @Enroll
+		set @Msg='Step Created Successfully.'
+	End
+
+	COMMIT TRANSACTION;
+	END TRY
+ BEGIN CATCH
+        ROLLBACK TRANSACTION;
+        set @Msg= 'An error occurred: ' + ERROR_MESSAGE();
+    END CATCH;
+END
+GO
+/****** Object:  StoredProcedure [dbo].[sprUpdateTask]    Script Date: 9/16/2025 1:37:29 PM ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+-- =============================================
+-- Author:		<Author,,Name>
+-- Create date: <2025-7-17>
+-- Description:	<Description,,>
+-- =============================================
+CREATE PROCEDURE [dbo].[sprUpdateTask]
+	@Task int,
+	@Name Varchar(max),
+	@Description Varchar(max),
+	@ReqFrom Varchar(max),
+	@Priroty int,
+	@DeadLine date,
+	@intUserID int,
+	@Msg varchar(MAX) out
+
+AS
+BEGIN
+	Begin try
+	Begin Transaction
+
+		update ProjectManagement.dbo.tblTask set strTaskName=@Name, strDescription=@Description, strRequestFrom=@ReqFrom, intPriroty=@Priroty, dteDeadLine=@DeadLine
+		where intTaskID=@Task
+
+		EXEC ProjectManagement.dbo.sprLog 'Update', 'Task Update', '', @intUserID
+		set @Msg='Task Updated Successfully!!!'
+	Commit
+	End try
+	Begin Catch
+		Rollback
+		set @Msg='Sorry there was an error'
+	End Catch
+END
+GO
+/****** Object:  StoredProcedure [dbo].[sprUpdateUser]    Script Date: 9/16/2025 1:37:29 PM ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+-- =============================================
+-- Author:		<Author,,Name>
+-- Create date: <Create Date,,>
+-- Description:	<Description,,>
+/*
+ declare @Output varchar(200)
+ exec sprUpdateUser 22,'Subrato Sarker','01779951167','22Subrato@akijbashir.com',1,1,0,2,1, @Output output
+ select @Output
+ */
+-- =============================================
+CREATE PROCEDURE [dbo].[sprUpdateUser] 
+	
+	@User int,
+	@Name varchar(200),
+	@Phone varchar(20),
+	@Email varchar(200),
+	@TeamiID int,
+	@isActive bit,
+	@isBoss bit,
+	@Enroll int,
+	@Locked bit,
+	@Msg varchar(MAX) out
+AS
+BEGIN
+ BEGIN TRANSACTION;
+	BEGIN TRY
+	set @Msg='Sorry there was nothing to change.'
+	Declare @Details varchar(max)
+	Declare @UName varchar(max), @UPhone varchar(max), @UEmail varchar(max), @UTeam int
+	Declare @Notify varchar(MAX)
+	if(@isBoss=1)
+	Begin
+		Declare @Sup int
+		select top 1 @Sup=intUserID from ProjectManagement.dbo.tblTeam where intTeamID=@TeamiID
+		IF(@Sup!=@User)
+		Begin
+			Declare @TeamName varchar(500), @PreSup int
+			select top 1 @TeamName= strTeamName, @PreSup=intUserID from ProjectManagement.dbo.tblTeam where intTeamID=@TeamiID
+			set @Notify  ='Superviser have been change of '+@TeamName
+			exec dbo.sprNotify @PreSup, @Notify
+
+			set @Details= 'Superviser is being change of Team- '+cast(@TeamiID as varchar(100))+', New Superviser is '+cast(@User as varchar(100))+' form ' +cast(@Sup as varchar(100))+'.'
+			update ProjectManagement.dbo.tblTeam set intUserID=@User where intTeamID=@TeamiID
+			EXEC ProjectManagement.dbo.sprLog 'Update', 'Superviser Change', @Details, @Enroll
+			set @Msg='Superviser Changed Successfully.'
+
+			set @Notify  ='Congratulation, '+@TeamName+' have been assigned to you'
+			exec dbo.sprNotify @User, @Notify
+		End
+	End
+	IF(@isActive=0)
+	Begin
+		update ProjectManagement.dbo.tblUser set isActive=0 where intUserID=@User
+		EXEC ProjectManagement.dbo.sprLog 'Update', 'User Inactive', 'User Inactive', @Enroll
+		set @Msg='User Deactive Successfully.'
+	End
+	select top 1 @UName=strUserName, @UPhone=strPhone, @UEmail=strEmail, @UTeam=intTeamID from ProjectManagement.dbo.tblUser where intUserID=@User
+	IF(@UName!=@Name or @UPhone!=@Phone or @UEmail!=@Email or @UTeam!=@TeamiID)
+	Begin
+		set @Details= 'Update User - '+cast(@User as varchar(100))+'. strUserName-'+@UName+' strPhone-'+@UPhone+' strEmail-'+@UEmail+' Team-'+cast(@UTeam as varchar(100))+'.strUserName-'+@Name+' strPhone-'+@Phone+' strEmail-'+@Email+' Team-'+cast(@TeamiID as varchar(100))
+		update ProjectManagement.dbo.tblUser set strUserName=@Name, strPhone=@Phone, strEmail=@Email, intTeamID=@TeamiID where intUserID=@User
+		EXEC ProjectManagement.dbo.sprLog 'Update', 'User Update', @Details, @Enroll
+		set @Msg='User Updated Successfully.'
+
+		set @Notify  ='Your information have been updated.'
+		exec dbo.sprNotify @User, @Notify
+	End
+	Declare @PreLock bit =(select top 1 isLocked from ProjectManagement.dbo.tblUserSecurity where intUserID=@User)
+	if(@PreLock!=@Locked)
+	Begin
+		Update ProjectManagement.dbo.tblUserSecurity set intFailedAttamped=0 where intUserID=@User
+		set @Details= 'User Unlocked ID-'+cast(@User as varchar(100))
+		EXEC ProjectManagement.dbo.sprLog 'Update', 'UnLocked', @Details, @Enroll
+		set @Msg='User UnLocked Successfully.'
+
+		set @Notify  ='Your account has been unlocked.'
+		exec dbo.sprNotify @User, @Notify
+	End
+
+	COMMIT TRANSACTION;
+	END TRY
+ BEGIN CATCH
+        ROLLBACK TRANSACTION;
+        set @Msg= 'An error occurred: ' + ERROR_MESSAGE();
+    END CATCH;
+END
+GO
+/****** Object:  StoredProcedure [dbo].[sprWorkLog]    Script Date: 9/16/2025 1:37:29 PM ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+-- =============================================
+-- Author:		<Author,,Name>
+-- Create date: <Create Date,,>
+-- Description:	<Description,,>
+-- exec sprWorkLog 2,'00:00:30',1,1
+-- =============================================
+CREATE PROCEDURE [dbo].[sprWorkLog]
+	@Enroll int,
+	@TmWorking Time,
+	@Status int,
+	@Task int
+AS
+BEGIN
+		INSERT INTO ProjectManagement.dbo.tblWorkLog (intUserID, tmWorking, intStatusID, intTaskID)
+		values (@Enroll, @TmWorking, @Status, @Task)
+END
+GO
+USE [master]
+GO
+ALTER DATABASE [ProjectManagement] SET  READ_WRITE 
+GO
