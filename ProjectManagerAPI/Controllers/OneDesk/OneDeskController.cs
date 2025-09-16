@@ -5,6 +5,7 @@ using Microsoft.EntityFrameworkCore;
 using ProjectManagerAPI.Context;
 using ProjectManagerAPI.Model.OneDesk;
 using ProjectManagerAPI.Model.Task;
+using ProjectManagerAPI.Repository.Profile;
 using System.Data;
 
 namespace ProjectManagerAPI.Controllers.OneDesk
@@ -24,6 +25,7 @@ namespace ProjectManagerAPI.Controllers.OneDesk
         {
             try
             {
+                var fileApi = new FileAPI();
                 // 1. Create output parameters
                 var paramCurrentPage = new SqlParameter("@CurrentPage", SqlDbType.Int) { Direction = ParameterDirection.Output };
                 var paramPerPage = new SqlParameter("@Per_Page", SqlDbType.Int) { Direction = ParameterDirection.Output };
@@ -58,6 +60,22 @@ namespace ProjectManagerAPI.Controllers.OneDesk
                         @To={9} OUTPUT",
                         page, pageSize, paramName, paramDesignation, paramCurrentPage, paramPerPage, paramTotal, paramLastPage, paramFrom, paramTo)
                     .ToListAsync();
+                foreach (var employee in employees)
+                {
+                    try
+                    {
+                        var (photoBytes, fileName) = await fileApi.GetSingleFileFromBase64Async(employee.Enroll.ToString());
+
+                        // 3. Assign photo bytes to employee.Photo
+                        employee.Photo = photoBytes ?? Array.Empty<byte>();
+                        employee.PFileName = fileName;
+                    }
+                    catch
+                    {
+                        // Handle per-employee errors individually
+                        employee.Photo = Array.Empty<byte>();
+                    }
+                }
 
                 // 4. Map output parameters to paged result
                 return new PagedResult<Employee>
@@ -91,10 +109,27 @@ namespace ProjectManagerAPI.Controllers.OneDesk
         {
             try
             {
+                var fileApi = new FileAPI();
                 // Call the stored procedure to get new employees
                 var employees = await _dbContext.Employee
                     .FromSqlRaw(@"EXEC erp_hr.dbo.sprOneDeskGetNewEmployeeList")
                     .ToListAsync();
+                foreach (var employee in employees)
+                {
+                    try
+                    {
+                        var (photoBytes, fileName) = await fileApi.GetSingleFileFromBase64Async(employee.Enroll.ToString());
+
+                        // 3. Assign photo bytes to employee.Photo
+                        employee.Photo = photoBytes ?? Array.Empty<byte>();
+                        employee.PFileName = fileName; 
+                    }
+                    catch
+                    {
+                        // Handle per-employee errors individually
+                        employee.Photo = Array.Empty<byte>();
+                    }
+                }
 
                 return employees;
             }

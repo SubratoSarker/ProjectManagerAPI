@@ -14,5 +14,7 @@ namespace ProjectManagerAPI.Model.OneDesk
         public string ContactNo { get; set; } = string.Empty;
         public string JobStationName { get; set; } = string.Empty;
         public string BloodGroup { get; set; } = string.Empty;
+        public string PFileName { get; set; } = string.Empty;
+        public byte[]? Photo { get; set; }= Array.Empty<byte>();
     }
 }
