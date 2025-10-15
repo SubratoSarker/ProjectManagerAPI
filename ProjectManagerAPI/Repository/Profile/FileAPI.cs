@@ -14,7 +14,7 @@ namespace ProjectManagerAPI.Repository.Profile
         protected static readonly string ApiPassword = "!erp@98766789";
         protected static readonly string ApiBaseUrl = "https://fileuploaddownloadapi.akijbashir.com/api";
 
-        private async Task<string?> GetTokenAsync()
+        public async Task<string?> GetTokenAsync()
         {
             string url = $"{ApiBaseUrl}/Login/Login";
             var requestBody = new

@@ -21,6 +21,15 @@ builder.Services.AddDbContext<HRDBContext>(options =>
 );
 builder.Services.AddScoped<IAPIValidation, APIValidation>();
 builder.Services.AddScoped<IJWT, JWT>();
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowFrontend", policy =>
+    {
+        policy.AllowAnyOrigin()
+              .AllowAnyHeader()
+              .AllowAnyMethod();
+    });
+});
 
 // Combine both authentication schemes if needed (optional)
 builder.Services.AddAuthentication(options =>
@@ -54,6 +63,7 @@ var app = builder.Build();
 app.MapHealthChecks("health");
 app.UseSwagger();
 app.UseSwaggerUI();
+app.UseCors("AllowFrontend");
 
 // Add authentication and authorization middleware
 app.UseAuthentication();

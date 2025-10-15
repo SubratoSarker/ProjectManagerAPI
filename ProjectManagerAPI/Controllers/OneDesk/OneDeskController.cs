@@ -21,7 +21,7 @@ namespace ProjectManagerAPI.Controllers.OneDesk
             _dbContext = dbContext;
         }
         [HttpGet("GetEmployeeList")]
-        public async Task<PagedResult<Employee>> GetEmployeeList(int page = 1, int pageSize = 10, string? name = null, string? designation = null)
+        public async Task<PagedResult<Employee>> GetEmployeeList(int page = 1, int pageSize = 10, string? search = null, string? designation = null, string? blood = null)
         {
             try
             {
@@ -37,11 +37,15 @@ namespace ProjectManagerAPI.Controllers.OneDesk
                 // 2. Input parameters for filtering
                 var paramName = new SqlParameter("@Name", SqlDbType.VarChar, 200)
                 {
-                    Value = string.IsNullOrEmpty(name) ? DBNull.Value : name
+                    Value = string.IsNullOrEmpty(search) ? DBNull.Value : search
                 };
-                var paramDesignation = new SqlParameter("@Designation", SqlDbType.VarChar, 200)
+                var paramDesignation = new SqlParameter("@Department", SqlDbType.VarChar, 200)
                 {
                     Value = string.IsNullOrEmpty(designation) ? DBNull.Value : designation
+                };
+                var paramBlood = new SqlParameter("@Blood", SqlDbType.VarChar, 200)
+                {
+                    Value = string.IsNullOrEmpty(blood) ? DBNull.Value : blood
                 };
 
                 // 3. Call the stored procedure
@@ -50,15 +54,16 @@ namespace ProjectManagerAPI.Controllers.OneDesk
                         @"EXEC erp_hr.dbo.sprOneDeskGetEmployeeList 
                         @PageNumber={0}, 
                         @PageSize={1}, 
-                        @Name={2}, 
-                        @Designation={3}, 
-                        @CurrentPage={4} OUTPUT, 
-                        @Per_Page={5} OUTPUT, 
-                        @Total={6} OUTPUT, 
-                        @Last_Page={7} OUTPUT, 
-                        @From={8} OUTPUT, 
-                        @To={9} OUTPUT",
-                        page, pageSize, paramName, paramDesignation, paramCurrentPage, paramPerPage, paramTotal, paramLastPage, paramFrom, paramTo)
+                        @Search={2}, 
+                        @Department={3}, 
+                        @Blood={4},
+                        @CurrentPage={5} OUTPUT, 
+                        @Per_Page={6} OUTPUT, 
+                        @Total={7} OUTPUT, 
+                        @Last_Page={8} OUTPUT, 
+                        @From={9} OUTPUT, 
+                        @To={10} OUTPUT",
+                        page, pageSize, paramName, paramDesignation, paramBlood, paramCurrentPage, paramPerPage, paramTotal, paramLastPage, paramFrom, paramTo)
                     .ToListAsync();
                 foreach (var employee in employees)
                 {
@@ -122,7 +127,7 @@ namespace ProjectManagerAPI.Controllers.OneDesk
 
                         // 3. Assign photo bytes to employee.Photo
                         employee.Photo = photoBytes ?? Array.Empty<byte>();
-                        employee.PFileName = fileName; 
+                        employee.PFileName = fileName;
                     }
                     catch
                     {
@@ -139,5 +144,37 @@ namespace ProjectManagerAPI.Controllers.OneDesk
                 return new List<Employee>();
             }
         }
+        [HttpGet("CheckHealth")]
+        public async Task<IActionResult> CheckHealth()
+        {
+            var fileApi = new FileAPI();
+
+            // 1. Check DB connection
+            try
+            {
+                var canConnect = await _dbContext.Database.CanConnectAsync();
+                if (!canConnect)
+                    return StatusCode(500, "Database connection failed.");
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Database connection error: {ex.Message}");
+            }
+
+            // 2. Check File API
+            try
+            {
+                var token = await fileApi.GetTokenAsync(); // returns null if fails
+                if (string.IsNullOrEmpty(token))
+                    return StatusCode(500, "File API connection failed.");
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"File API connection error: {ex.Message}");
+            }
+
+            return Ok("All systems are operational.");
+        }
+
     }
 }
