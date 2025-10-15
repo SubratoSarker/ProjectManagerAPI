@@ -7,6 +7,7 @@ using Microsoft.EntityFrameworkCore.Metadata.Internal;
 using ProjectManagerAPI.Context;
 using ProjectManagerAPI.Model.Admin;
 using ProjectManagerAPI.Model.ProjectModel;
+using ProjectManagerAPI.Model.Task;
 using ProjectManagerAPI.Repository.Security;
 using System.Data;
 using System.Numerics;
@@ -159,6 +160,41 @@ namespace ProjectManagerAPI.Controllers.Admin
             {
                 var commandText = $"EXEC sprGetCompleatedTask  '{From}', '{To}' ";
                 var result = _dbContext.CompleatedReport.FromSqlRaw(commandText).ToList();
+
+                return result;
+            }
+            catch (Exception ex)
+            {
+                // Handle other exceptions
+                return null;
+            }
+        }
+        [HttpGet]
+        [Route("GetPendingTasks")]
+        public async Task<List<PendingTask>> GetPendingTasks(int Enroll)
+        {
+            try
+            {
+                var commandText = $"EXEC sprPendingReportTeam {Enroll}";
+                var result = _dbContext.PendingTask.FromSqlRaw(commandText).ToList();
+
+                return result;
+            }
+            catch (Exception ex)
+            {
+                // Handle other exceptions
+                return null;
+            }
+        }
+        [HttpGet]
+        [Route("GetPerFormance")]
+        [AllowAnonymous]
+        public async Task<List<Performance>> GetPerFormance(DateTime From, DateTime To, int User, int Project)
+        {
+            try
+            {
+                var commandText = $"EXEC PerformanceReprotTeamExport '{From}','{To}',{User},{Project}";
+                var result = _dbContext.Performance.FromSqlRaw(commandText).ToList();
 
                 return result;
             }

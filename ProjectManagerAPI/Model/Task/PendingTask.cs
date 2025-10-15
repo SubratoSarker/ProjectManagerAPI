@@ -15,5 +15,6 @@ namespace ProjectManagerAPI.Model.Task
         public DateOnly dteDeadLine { get; set; }
         public DateTime dteCreated { get; set; }
         public string strRequestFrom { get; set; }
+        public string AssignedTo { get; set; }
     }
 }
