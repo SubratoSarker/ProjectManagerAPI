@@ -15,10 +15,12 @@ namespace ProjectManagerAPI.Controllers.OneDesk
     [ApiController]
     public class OneDeskController : ControllerBase
     {
+        private readonly ApplicationDBContext _proj;
         private readonly HRDBContext _dbContext;
-        public OneDeskController(HRDBContext dbContext)
+        public OneDeskController(HRDBContext dbContext, ApplicationDBContext proj)
         {
             _dbContext = dbContext;
+            _proj = proj;
         }
         [HttpGet("GetEmployeeList")]
         public async Task<PagedResult<Employee>> GetEmployeeList(int page = 1, int pageSize = 10, string? search = null, string? designation = null, string? blood = null)
@@ -174,6 +176,23 @@ namespace ProjectManagerAPI.Controllers.OneDesk
             }
 
             return Ok("All systems are operational.");
+        }
+        [HttpGet("GetTeamProjectProgress")]
+        [AllowAnonymous]
+        public async Task<ActionResult<List<RunningProjectProgress>>> GetTeamProjectProgress()
+        {
+            try
+            {
+                var report = await _proj.RunningProjectProgress
+                    .FromSqlRaw("EXEC ProjectManagement.dbo.sprTeamProjectDynamicProgress")
+                    .ToListAsync();
+
+                return Ok(report);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { message = "Error fetching progress report", error = ex.Message });
+            }
         }
 
     }

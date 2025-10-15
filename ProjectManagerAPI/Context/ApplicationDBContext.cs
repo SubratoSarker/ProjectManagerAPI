@@ -1,6 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using ProjectManagementAPI.Model.Security;
 using ProjectManagerAPI.Model.Admin;
+using ProjectManagerAPI.Model.OneDesk;
 using ProjectManagerAPI.Model.ProjectModel;
 using ProjectManagerAPI.Model.Task;
 using ProjectManagerAPI.Model.User;
@@ -25,6 +26,7 @@ namespace ProjectManagerAPI.Context
         public DbSet<DateWiseReport> DateWiseReport { get; set; }
         public DbSet<PendingTask> PendingTask { get; set; }
         public DbSet<CompleatedReport> CompleatedReport { get; set; }
+        public DbSet<RunningProjectProgress> RunningProjectProgress { get; set; }
         public ApplicationDBContext(DbContextOptions<ApplicationDBContext> options) : base(options)
         {
         }
