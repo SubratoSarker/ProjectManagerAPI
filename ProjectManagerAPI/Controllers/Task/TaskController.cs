@@ -5,6 +5,7 @@ using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Internal;
 using ProjectManagerAPI.Context;
+using ProjectManagerAPI.Model.Admin;
 using ProjectManagerAPI.Model.ProjectModel;
 using ProjectManagerAPI.Model.Task;
 using ProjectManagerAPI.Repository.Security;
@@ -396,6 +397,23 @@ namespace ProjectManagerAPI.Controllers.Task
             {
                 // Handle other exceptions
                 return StatusCode(500, $"Database connection failed: {ex.Message}");
+            }
+        }
+        [HttpGet]
+        [Route("GetCompleatedReport")]
+        public async Task<List<CompleatedReport>> GetCompleatedReport(DateTime From, DateTime To, int Enroll)
+        {
+            try
+            {
+                var commandText = $"EXEC sprGetCompleatedTaskSelf '{From}', '{To}', {Enroll} ";
+                var result = _dbContext.CompleatedReport.FromSqlRaw(commandText).ToList();
+
+                return result;
+            }
+            catch (Exception ex)
+            {
+                // Handle other exceptions
+                return null;
             }
         }
     }
