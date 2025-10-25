@@ -129,7 +129,7 @@ namespace ProjectManagerAPI.Controllers.Project
         }
         [HttpGet]
         [Route("ProjectAssign")]
-        public async Task<IActionResult> ProjectAssign(int User, int Project, bool Active, int Enroll)
+        public async Task<IActionResult> ProjectAssign(int User, int Project, bool Active, bool KeyPerson, int Enroll)
         {
             try
             {
@@ -141,10 +141,11 @@ namespace ProjectManagerAPI.Controllers.Project
 
                 // Call the stored procedure asynchronously
                 await _dbContext.Database.ExecuteSqlRawAsync(
-                    "EXEC sprAssignUser @User, @Project, @Active, @Enroll, @Msg OUT",
+                    "EXEC sprAssignUser @User, @Project, @Active, @KeyPerson, @Enroll, @Msg OUT",
                     new SqlParameter("@User", User),
                     new SqlParameter("@Project", Project),
                     new SqlParameter("@Active", Active),
+                    new SqlParameter("@KeyPerson", KeyPerson),
                     new SqlParameter("@Enroll", Enroll),
                     msgParameter
                 );
