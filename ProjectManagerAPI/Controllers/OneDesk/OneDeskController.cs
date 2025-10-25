@@ -23,7 +23,7 @@ namespace ProjectManagerAPI.Controllers.OneDesk
             _proj = proj;
         }
         [HttpGet("GetEmployeeList")]
-        public async Task<PagedResult<Employee>> GetEmployeeList(int page = 1, int pageSize = 10, string? search = null, string? designation = null, string? blood = null)
+        public async Task<PagedResult<Employee>> GetEmployeeList(int page = 1, int pageSize = 10, string? search = null, string? department = null, string? blood = null)
         {
             try
             {
@@ -41,9 +41,9 @@ namespace ProjectManagerAPI.Controllers.OneDesk
                 {
                     Value = string.IsNullOrEmpty(search) ? DBNull.Value : search
                 };
-                var paramDesignation = new SqlParameter("@Department", SqlDbType.VarChar, 200)
+                var paramDepartment = new SqlParameter("@Department", SqlDbType.VarChar, 200)
                 {
-                    Value = string.IsNullOrEmpty(designation) ? DBNull.Value : designation
+                    Value = string.IsNullOrEmpty(department) ? DBNull.Value : department
                 };
                 var paramBlood = new SqlParameter("@Blood", SqlDbType.VarChar, 200)
                 {
@@ -65,7 +65,7 @@ namespace ProjectManagerAPI.Controllers.OneDesk
                         @Last_Page={8} OUTPUT, 
                         @From={9} OUTPUT, 
                         @To={10} OUTPUT",
-                        page, pageSize, paramName, paramDesignation, paramBlood, paramCurrentPage, paramPerPage, paramTotal, paramLastPage, paramFrom, paramTo)
+                        page, pageSize, paramName, paramDepartment, paramBlood, paramCurrentPage, paramPerPage, paramTotal, paramLastPage, paramFrom, paramTo)
                     .ToListAsync();
                 foreach (var employee in employees)
                 {
