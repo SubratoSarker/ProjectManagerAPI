@@ -19,5 +19,6 @@ namespace ProjectManagerAPI.Model.OneDesk
         public DateTime JoiningDate { get; set; } = DateTime.Now;
         public string PFileName { get; set; } = string.Empty;
         public byte[]? Photo { get; set; }= Array.Empty<byte>();
+        public string Extension { get; set; } = string.Empty;
     }
 }
