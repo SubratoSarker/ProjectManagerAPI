@@ -20,35 +20,33 @@ namespace ProjectManagerAPI.Controllers.Security
         private readonly IAPIValidation _apiValidation;
         private readonly IConfiguration _configuration;
         private readonly IJWT _jwt;
+        private readonly HRDBContext _hrDbContext;
 
-
-        public UserSecurityController(ApplicationDBContext dbContext, IAPIValidation apiValidation, IConfiguration configuration, IJWT jwt)
+        public UserSecurityController(ApplicationDBContext dbContext, IAPIValidation apiValidation, IConfiguration configuration, IJWT jwt, HRDBContext hrDbContext)
         {
             _dbContext = dbContext;
             _apiValidation = apiValidation;
             _configuration = configuration;
             _jwt = jwt;
+            _hrDbContext = hrDbContext;
         }
         [HttpGet]
         [Route("SecurityCheck")]
         [Authorize(AuthenticationSchemes = "APIValidationScheme")]
-        public IActionResult SecurityCheck(string Name,string Key,int Type, string Code)
+        [AllowAnonymous]
+        public async Task<IActionResult> SecurityCheck(string Name, string Key, int Type, string Code)
         {
             try
             {
-                LogInRequest req= new LogInRequest();
+                LogInRequest req = new LogInRequest();
                 req.UserName = Name;
                 req.PassWord = Key;
-                //req.PassWord = "Test";
                 req.Type = Type;
                 req.Code = Code;
 
                 var result = _dbContext.LogInResponse
                     .FromSqlRaw($"EXEC sprSecurityCheck {req.Type},'{req.UserName}','{req.PassWord}','{req.Code}'")
                     .ToList();
-                //var result = _dbContext.LogInResponse
-                //.FromSqlRaw($"SELECT 1 AS UserID, 'Name' AS UserName, '0' AS Phone, 'E' AS Email, 1 AS TeamID, 'Team' AS TeamName, CAST(0 AS BIT) AS ISBoss, CAST(0 AS BIT) AS ISAdmin, 'a' AS Token, 'a' AS Response")
-                //.AsEnumerable();
 
                 if (result == null || !result.Any())
                 {
@@ -57,20 +55,23 @@ namespace ProjectManagerAPI.Controllers.Security
 
                 var response = result.First();
 
-                // Check if Token is null
                 if (response.Response == "GO")
                 {
                     response.Token = _jwt.JWTToken(response);
+                }
+                else if (response.TeamName == "Otp Request" && response.UserName == "Otp Request")
+                {
+                    await _hrDbContext.Database.ExecuteSqlRawAsync(
+                        "EXEC erp_hr.dbo.sprOTPSendAG @Phone={0}, @OTP={1}",
+                        response.Phone,
+                        response.Email);
                 }
 
                 return Ok(result);
             }
             catch (Exception ex)
             {
-                // Log the exception for debugging purposes
                 Console.WriteLine($"Error: {ex.Message}");
-
-                // Return a 500 Internal Server Error status
                 return StatusCode(500, "Internal Server Error");
             }
         }
