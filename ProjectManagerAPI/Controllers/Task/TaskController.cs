@@ -416,5 +416,50 @@ namespace ProjectManagerAPI.Controllers.Task
                 return null;
             }
         }
+        [HttpGet]
+        [Route("RequestForTask")]
+        public async Task<IActionResult> RequestForTask(
+                                                        int TaskID,
+                                                        int UserID,
+                                                        DateTime Date,
+                                                        int Status,
+                                                        TimeSpan tm,
+                                                        string From,
+                                                        string To,
+                                                        string Reason)
+        {
+            try
+            {
+                // Output parameter for the response message
+                var msgParameter = new SqlParameter("@Msg", SqlDbType.VarChar, -1)
+                {
+                    Direction = ParameterDirection.Output
+                };
+
+                await _dbContext.Database.ExecuteSqlRawAsync(
+                    "EXEC sprRequestEntryForTask @intTaskID, @intUserID, @dteDate, @intStatusID, @tmWorking, @From, @To, @Reason, @Msg OUT",
+                    new SqlParameter("@intTaskID", TaskID),
+                    new SqlParameter("@intUserID", UserID),
+                    new SqlParameter("@dteDate", Date),
+                    new SqlParameter("@intStatusID", Status),
+                    new SqlParameter("@tmWorking", tm),
+                    new SqlParameter("@From", From),
+                    new SqlParameter("@To", To),
+                    new SqlParameter("@Reason", Reason),
+                    msgParameter
+                );
+
+                var message = msgParameter.Value?.ToString();
+                return new JsonResult(message);
+            }
+            catch (DbUpdateException dbEx)
+            {
+                return StatusCode(503, "Database temporarily unavailable.");
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Database connection failed: {ex.Message}");
+            }
+        }
     }
 }
