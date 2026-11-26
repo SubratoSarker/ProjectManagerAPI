@@ -834,5 +834,205 @@ namespace ProjectManagerAPI.Controllers.Task
                 return StatusCode(500, $"Database connection failed: {ex.Message}");
             }
         }
+
+        // ---- Recurring tasks ----
+        [HttpGet]
+        [Route("CreateRecurringTask")]
+        public async Task<IActionResult> CreateRecurringTask(string Name, int Priroty, int ProjectID, int AssignTo, string Recurrence, DateOnly StartDate, int Enroll, string Description = "")
+        {
+            try
+            {
+                var msgParameter = new SqlParameter("@Msg", SqlDbType.VarChar, -1) { Direction = ParameterDirection.Output };
+                await _dbContext.Database.ExecuteSqlRawAsync(
+                    "EXEC sprCreateRecurringTask @Name, @Description, @Priroty, @ProjectID, @AssignTo, @Recurrence, @StartDate, @Enroll, @Msg OUT",
+                    new SqlParameter("@Name", Name),
+                    new SqlParameter("@Description", Description ?? ""),
+                    new SqlParameter("@Priroty", Priroty),
+                    new SqlParameter("@ProjectID", ProjectID),
+                    new SqlParameter("@AssignTo", AssignTo),
+                    new SqlParameter("@Recurrence", Recurrence),
+                    new SqlParameter("@StartDate", StartDate.ToDateTime(TimeOnly.MinValue)),
+                    new SqlParameter("@Enroll", Enroll),
+                    msgParameter
+                );
+                return new JsonResult(msgParameter.Value?.ToString());
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Database connection failed: {ex.Message}");
+            }
+        }
+
+        [HttpGet]
+        [Route("GetRecurringTasks")]
+        public async Task<List<RecurringTask>> GetRecurringTasks(int Enroll)
+        {
+            try
+            {
+                var commandText = $"EXEC sprGetRecurringTasks {Enroll}";
+                return _dbContext.RecurringTask.FromSqlRaw(commandText).ToList();
+            }
+            catch (Exception ex)
+            {
+                return null;
+            }
+        }
+
+        [HttpGet]
+        [Route("ToggleRecurringTask")]
+        public async Task<IActionResult> ToggleRecurringTask(int RecurringID, int Enroll)
+        {
+            try
+            {
+                var msgParameter = new SqlParameter("@Msg", SqlDbType.VarChar, -1) { Direction = ParameterDirection.Output };
+                await _dbContext.Database.ExecuteSqlRawAsync(
+                    "EXEC sprToggleRecurringTask @RecurringID, @Enroll, @Msg OUT",
+                    new SqlParameter("@RecurringID", RecurringID),
+                    new SqlParameter("@Enroll", Enroll),
+                    msgParameter
+                );
+                return new JsonResult(msgParameter.Value?.ToString());
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Database connection failed: {ex.Message}");
+            }
+        }
+
+        [HttpGet]
+        [Route("DeleteRecurringTask")]
+        public async Task<IActionResult> DeleteRecurringTask(int RecurringID, int Enroll)
+        {
+            try
+            {
+                var msgParameter = new SqlParameter("@Msg", SqlDbType.VarChar, -1) { Direction = ParameterDirection.Output };
+                await _dbContext.Database.ExecuteSqlRawAsync(
+                    "EXEC sprDeleteRecurringTask @RecurringID, @Enroll, @Msg OUT",
+                    new SqlParameter("@RecurringID", RecurringID),
+                    new SqlParameter("@Enroll", Enroll),
+                    msgParameter
+                );
+                return new JsonResult(msgParameter.Value?.ToString());
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Database connection failed: {ex.Message}");
+            }
+        }
+
+        [HttpGet]
+        [Route("ProcessDueRecurring")]
+        public async Task<IActionResult> ProcessDueRecurring(int Enroll)
+        {
+            try
+            {
+                var result = _dbContext.SpawnResult.FromSqlRaw("EXEC sprProcessDueRecurring {0}", Enroll).AsEnumerable().FirstOrDefault();
+                return new JsonResult(result?.SpawnCount ?? 0);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Database connection failed: {ex.Message}");
+            }
+        }
+
+        // ---- Task templates ----
+        [HttpGet]
+        [Route("CreateTaskTemplate")]
+        public async Task<IActionResult> CreateTaskTemplate(string Name, string TaskName, int Priroty, int Enroll, string Description = "", string StepsPipeDelimited = "")
+        {
+            try
+            {
+                var msgParameter = new SqlParameter("@Msg", SqlDbType.VarChar, -1) { Direction = ParameterDirection.Output };
+                await _dbContext.Database.ExecuteSqlRawAsync(
+                    "EXEC sprCreateTaskTemplate @Name, @TaskName, @Description, @Priroty, @StepsPipeDelimited, @Enroll, @Msg OUT",
+                    new SqlParameter("@Name", Name),
+                    new SqlParameter("@TaskName", TaskName),
+                    new SqlParameter("@Description", Description ?? ""),
+                    new SqlParameter("@Priroty", Priroty),
+                    new SqlParameter("@StepsPipeDelimited", StepsPipeDelimited ?? ""),
+                    new SqlParameter("@Enroll", Enroll),
+                    msgParameter
+                );
+                return new JsonResult(msgParameter.Value?.ToString());
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Database connection failed: {ex.Message}");
+            }
+        }
+
+        [HttpGet]
+        [Route("GetTaskTemplates")]
+        public async Task<List<TaskTemplate>> GetTaskTemplates(int Enroll)
+        {
+            try
+            {
+                var commandText = $"EXEC sprGetTaskTemplates {Enroll}";
+                return _dbContext.TaskTemplate.FromSqlRaw(commandText).ToList();
+            }
+            catch (Exception ex)
+            {
+                return null;
+            }
+        }
+
+        [HttpGet]
+        [Route("GetTemplateSteps")]
+        public async Task<List<TemplateStep>> GetTemplateSteps(int TemplateID)
+        {
+            try
+            {
+                var commandText = $"EXEC sprGetTemplateSteps {TemplateID}";
+                return _dbContext.TemplateStep.FromSqlRaw(commandText).ToList();
+            }
+            catch (Exception ex)
+            {
+                return null;
+            }
+        }
+
+        [HttpGet]
+        [Route("DeleteTaskTemplate")]
+        public async Task<IActionResult> DeleteTaskTemplate(int TemplateID, int Enroll)
+        {
+            try
+            {
+                var msgParameter = new SqlParameter("@Msg", SqlDbType.VarChar, -1) { Direction = ParameterDirection.Output };
+                await _dbContext.Database.ExecuteSqlRawAsync(
+                    "EXEC sprDeleteTaskTemplate @TemplateID, @Enroll, @Msg OUT",
+                    new SqlParameter("@TemplateID", TemplateID),
+                    new SqlParameter("@Enroll", Enroll),
+                    msgParameter
+                );
+                return new JsonResult(msgParameter.Value?.ToString());
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Database connection failed: {ex.Message}");
+            }
+        }
+
+        [HttpGet]
+        [Route("ApplyTaskTemplate")]
+        public async Task<IActionResult> ApplyTaskTemplate(int TemplateID, int ProjectID, DateOnly DeadLine, int Enroll)
+        {
+            try
+            {
+                var msgParameter = new SqlParameter("@Msg", SqlDbType.VarChar, -1) { Direction = ParameterDirection.Output };
+                await _dbContext.Database.ExecuteSqlRawAsync(
+                    "EXEC sprApplyTaskTemplate @TemplateID, @ProjectID, @DeadLine, @Enroll, @Msg OUT",
+                    new SqlParameter("@TemplateID", TemplateID),
+                    new SqlParameter("@ProjectID", ProjectID),
+                    new SqlParameter("@DeadLine", DeadLine.ToDateTime(TimeOnly.MinValue)),
+                    new SqlParameter("@Enroll", Enroll),
+                    msgParameter
+                );
+                return new JsonResult(msgParameter.Value?.ToString());
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Database connection failed: {ex.Message}");
+            }
+        }
     }
 }

@@ -47,6 +47,10 @@ namespace ProjectManagerAPI.Context
         public DbSet<SearchResult> SearchResult { get; set; }
         public DbSet<Teammate> Teammate { get; set; }
         public DbSet<CalendarTask> CalendarTask { get; set; }
+        public DbSet<RecurringTask> RecurringTask { get; set; }
+        public DbSet<TaskTemplate> TaskTemplate { get; set; }
+        public DbSet<TemplateStep> TemplateStep { get; set; }
+        public DbSet<SpawnResult> SpawnResult { get; set; }
         public ApplicationDBContext(DbContextOptions<ApplicationDBContext> options) : base(options)
         {
         }
