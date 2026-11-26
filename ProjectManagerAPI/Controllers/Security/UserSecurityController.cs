@@ -45,7 +45,7 @@ namespace ProjectManagerAPI.Controllers.Security
                 req.Code = Code;
 
                 var result = _dbContext.LogInResponse
-                    .FromSqlRaw($"EXEC sprSecurityCheck {req.Type},'{req.UserName}','{req.PassWord}','{req.Code}'")
+                    .FromSqlRaw("EXEC sprSecurityCheck {0}, {1}, {2}, {3}", req.Type, req.UserName, req.PassWord, req.Code)
                     .ToList();
 
                 if (result == null || !result.Any())
@@ -83,11 +83,9 @@ namespace ProjectManagerAPI.Controllers.Security
             try
             {
 
-                //var result = _dbContext.LogInResponse
-                //       .FromSqlRaw($"EXEC sprRegistration '{Email}','{Name}','{Phone}','{Key}',{Team},{Enroll}")
-                //       .ToList(); // Execute the query immediately and materialize the results
-                var commandText = $"EXEC sprRegistration '{Email}','{Name}','{Phone}','{Key}',{Team},{Enroll}";
-                var result = _dbContext.LogInResponse.FromSqlRaw(commandText).ToList();
+                var result = _dbContext.LogInResponse
+                    .FromSqlRaw("EXEC sprRegistration {0}, {1}, {2}, {3}, {4}, {5}", Email, Name, Phone, Key, Team, Enroll)
+                    .ToList();
 
                 if (result == null)
                 {

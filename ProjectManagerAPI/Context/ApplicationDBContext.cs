@@ -1,6 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using ProjectManagementAPI.Model.Security;
 using ProjectManagerAPI.Model.Admin;
+using ProjectManagerAPI.Model.Dashboard;
 using ProjectManagerAPI.Model.OneDesk;
 using ProjectManagerAPI.Model.ProjectModel;
 using ProjectManagerAPI.Model.Task;
@@ -27,6 +28,25 @@ namespace ProjectManagerAPI.Context
         public DbSet<PendingTask> PendingTask { get; set; }
         public DbSet<CompleatedReport> CompleatedReport { get; set; }
         public DbSet<RunningProjectProgress> RunningProjectProgress { get; set; }
+        public DbSet<TaskComment> TaskComment { get; set; }
+        public DbSet<TaskAttachment> TaskAttachment { get; set; }
+        public DbSet<TaskDependency> TaskDependency { get; set; }
+        public DbSet<SubtaskItem> SubtaskItem { get; set; }
+        public DbSet<Milestone> Milestone { get; set; }
+        public DbSet<DashboardSummary> DashboardSummary { get; set; }
+        public DbSet<WorkloadItem> WorkloadItem { get; set; }
+        public DbSet<ProjectProgress> ProjectProgress { get; set; }
+        public DbSet<OverdueTask> OverdueTask { get; set; }
+        public DbSet<TaskLabel> TaskLabel { get; set; }
+        public DbSet<OffboardingUser> OffboardingUser { get; set; }
+        public DbSet<OpenTask> OpenTask { get; set; }
+        public DbSet<TimelineTask> TimelineTask { get; set; }
+        public DbSet<ActivityLogEntry> ActivityLogEntry { get; set; }
+        public DbSet<UpcomingMilestone> UpcomingMilestone { get; set; }
+        public DbSet<TeamActivityMember> TeamActivityMember { get; set; }
+        public DbSet<SearchResult> SearchResult { get; set; }
+        public DbSet<Teammate> Teammate { get; set; }
+        public DbSet<CalendarTask> CalendarTask { get; set; }
         public ApplicationDBContext(DbContextOptions<ApplicationDBContext> options) : base(options)
         {
         }

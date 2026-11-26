@@ -8,6 +8,7 @@ using ProjectManagerAPI.Context;
 using ProjectManagerAPI.Model.Admin;
 using ProjectManagerAPI.Model.ProjectModel;
 using ProjectManagerAPI.Model.Task;
+using ProjectManagerAPI.Repository.Profile;
 using ProjectManagerAPI.Repository.Security;
 using System.Data;
 using System.Numerics;
@@ -20,6 +21,7 @@ namespace ProjectManagerAPI.Controllers.Task
     public class TaskController : ControllerBase
     {
         private readonly ApplicationDBContext _dbContext;
+        private readonly FileAPI _fileApi = new FileAPI();
         public TaskController(ApplicationDBContext dbContext)
         {
             _dbContext = dbContext;
@@ -84,11 +86,11 @@ namespace ProjectManagerAPI.Controllers.Task
         }
         [HttpGet]
         [Route("GetTasks")]
-        public async Task<List<Tasks>> GetTasks(int Enroll, int Status)
+        public async Task<List<Tasks>> GetTasks(int Enroll, int Status, int LabelID = 0)
         {
             try
             {
-                var commandText = $"EXEC sprGetTaskByUser {Enroll},{Status}";
+                var commandText = $"EXEC sprGetTaskByUser {Enroll},{Status},{LabelID}";
                 var result = _dbContext.Tasks.FromSqlRaw(commandText).ToList();
 
                 return result;
@@ -324,6 +326,22 @@ namespace ProjectManagerAPI.Controllers.Task
                 return null;
             }
         }
+
+        // ---- Teammates (used to tag "@Name" mentions in comments) ----
+        [HttpGet]
+        [Route("GetTeammates")]
+        public async Task<List<Teammate>> GetTeammates(int Enroll)
+        {
+            try
+            {
+                var commandText = $"EXEC sprGetTeammates {Enroll}";
+                return _dbContext.Teammate.FromSqlRaw(commandText).ToList();
+            }
+            catch (Exception ex)
+            {
+                return null;
+            }
+        }
         [HttpGet]
         [Route("GetPendingTasks")]
         public async Task<List<PendingTask>> GetPendingTasks(int Enroll)
@@ -455,6 +473,361 @@ namespace ProjectManagerAPI.Controllers.Task
             catch (DbUpdateException dbEx)
             {
                 return StatusCode(503, "Database temporarily unavailable.");
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Database connection failed: {ex.Message}");
+            }
+        }
+
+        // ---- Comments ----
+        [HttpGet]
+        [Route("AddComment")]
+        public async Task<IActionResult> AddComment(int TaskID, int Enroll, string Comment)
+        {
+            try
+            {
+                var msgParameter = new SqlParameter("@Msg", SqlDbType.VarChar, -1) { Direction = ParameterDirection.Output };
+                await _dbContext.Database.ExecuteSqlRawAsync(
+                    "EXEC sprAddTaskComment @TaskID, @Enroll, @Comment, @Msg OUT",
+                    new SqlParameter("@TaskID", TaskID),
+                    new SqlParameter("@Enroll", Enroll),
+                    new SqlParameter("@Comment", Comment),
+                    msgParameter
+                );
+                return new JsonResult(msgParameter.Value?.ToString());
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Database connection failed: {ex.Message}");
+            }
+        }
+
+        [HttpGet]
+        [Route("GetComments")]
+        public async Task<List<TaskComment>> GetComments(int TaskID)
+        {
+            try
+            {
+                var commandText = $"EXEC sprGetTaskComments {TaskID}";
+                return _dbContext.TaskComment.FromSqlRaw(commandText).ToList();
+            }
+            catch (Exception ex)
+            {
+                return null;
+            }
+        }
+
+        // ---- Attachments ----
+        [HttpPost]
+        [Route("UploadAttachment")]
+        [RequestSizeLimit(25_000_000)]
+        public async Task<IActionResult> UploadAttachment(int TaskID, int Enroll, IFormFile File)
+        {
+            if (File == null || File.Length == 0)
+            {
+                return BadRequest("No file was provided.");
+            }
+
+            try
+            {
+                string folder = FileAPI.TaskAttachmentFolder(TaskID);
+                await using var stream = File.OpenReadStream();
+                var (success, message) = await _fileApi.UploadSingleFileAsync(folder, stream, File.FileName, File.ContentType);
+                if (!success)
+                {
+                    return StatusCode(502, $"File upload service failed: {message}");
+                }
+
+                var msgParameter = new SqlParameter("@Msg", SqlDbType.VarChar, -1) { Direction = ParameterDirection.Output };
+                await _dbContext.Database.ExecuteSqlRawAsync(
+                    "EXEC sprAddTaskAttachment @TaskID, @Enroll, @FileName, @RemotePath, @ContentType, @SizeBytes, @Msg OUT",
+                    new SqlParameter("@TaskID", TaskID),
+                    new SqlParameter("@Enroll", Enroll),
+                    new SqlParameter("@FileName", File.FileName),
+                    new SqlParameter("@RemotePath", folder),
+                    new SqlParameter("@ContentType", (object?)File.ContentType ?? DBNull.Value),
+                    new SqlParameter("@SizeBytes", File.Length),
+                    msgParameter
+                );
+                return new JsonResult(msgParameter.Value?.ToString());
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Database connection failed: {ex.Message}");
+            }
+        }
+
+        [HttpGet]
+        [Route("GetAttachments")]
+        public async Task<List<TaskAttachment>> GetAttachments(int TaskID)
+        {
+            try
+            {
+                var commandText = $"EXEC sprGetTaskAttachments {TaskID}";
+                return _dbContext.TaskAttachment.FromSqlRaw(commandText).ToList();
+            }
+            catch (Exception ex)
+            {
+                return null;
+            }
+        }
+
+        [HttpGet]
+        [Route("DownloadAttachment")]
+        public async Task<IActionResult> DownloadAttachment(int TaskID, string FileName)
+        {
+            var (content, resolvedName) = await _fileApi.GetFileFromFolderAsync(FileAPI.TaskAttachmentFolder(TaskID), FileName);
+            if (content == null)
+            {
+                return NotFound();
+            }
+            return File(content, "application/octet-stream", resolvedName ?? FileName);
+        }
+
+        [HttpGet]
+        [Route("DeleteAttachment")]
+        public async Task<IActionResult> DeleteAttachment(int AttachmentID, int Enroll)
+        {
+            try
+            {
+                var msgParameter = new SqlParameter("@Msg", SqlDbType.VarChar, -1) { Direction = ParameterDirection.Output };
+                await _dbContext.Database.ExecuteSqlRawAsync(
+                    "EXEC sprDeleteTaskAttachment @AttachmentID, @Enroll, @Msg OUT",
+                    new SqlParameter("@AttachmentID", AttachmentID),
+                    new SqlParameter("@Enroll", Enroll),
+                    msgParameter
+                );
+                return new JsonResult(msgParameter.Value?.ToString());
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Database connection failed: {ex.Message}");
+            }
+        }
+
+        // ---- Subtasks ----
+        [HttpGet]
+        [Route("CreateSubtask")]
+        public async Task<IActionResult> CreateSubtask(string Name, int ParentTaskID, int Priroty, DateOnly DeadLine, int Enroll, string Description = "")
+        {
+            try
+            {
+                var msgParameter = new SqlParameter("@Msg", SqlDbType.VarChar, -1) { Direction = ParameterDirection.Output };
+                await _dbContext.Database.ExecuteSqlRawAsync(
+                    "EXEC sprCreateSubtask @Name, @Description, @ParentTaskID, @Priroty, @DeadLine, @Enroll, @Msg OUT",
+                    new SqlParameter("@Name", Name),
+                    new SqlParameter("@Description", Description),
+                    new SqlParameter("@ParentTaskID", ParentTaskID),
+                    new SqlParameter("@Priroty", Priroty),
+                    new SqlParameter("@DeadLine", DeadLine),
+                    new SqlParameter("@Enroll", Enroll),
+                    msgParameter
+                );
+                return new JsonResult(msgParameter.Value?.ToString());
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Database connection failed: {ex.Message}");
+            }
+        }
+
+        [HttpGet]
+        [Route("GetSubtasks")]
+        public async Task<List<SubtaskItem>> GetSubtasks(int ParentTaskID)
+        {
+            try
+            {
+                var commandText = $"EXEC sprGetSubtasksByTask {ParentTaskID}";
+                return _dbContext.SubtaskItem.FromSqlRaw(commandText).ToList();
+            }
+            catch (Exception ex)
+            {
+                return null;
+            }
+        }
+
+        // ---- Dependencies ----
+        [HttpGet]
+        [Route("GetTasksForDependencyPicker")]
+        public async Task<List<SubtaskItem>> GetTasksForDependencyPicker(int TaskID)
+        {
+            try
+            {
+                var commandText = $"EXEC sprGetTasksForDependencyPicker {TaskID}";
+                return _dbContext.SubtaskItem.FromSqlRaw(commandText).ToList();
+            }
+            catch (Exception ex)
+            {
+                return null;
+            }
+        }
+
+        [HttpGet]
+        [Route("AddDependency")]
+        public async Task<IActionResult> AddDependency(int TaskID, int DependsOnTaskID, int Enroll)
+        {
+            try
+            {
+                var msgParameter = new SqlParameter("@Msg", SqlDbType.VarChar, -1) { Direction = ParameterDirection.Output };
+                await _dbContext.Database.ExecuteSqlRawAsync(
+                    "EXEC sprAddTaskDependency @TaskID, @DependsOnTaskID, @Enroll, @Msg OUT",
+                    new SqlParameter("@TaskID", TaskID),
+                    new SqlParameter("@DependsOnTaskID", DependsOnTaskID),
+                    new SqlParameter("@Enroll", Enroll),
+                    msgParameter
+                );
+                return new JsonResult(msgParameter.Value?.ToString());
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Database connection failed: {ex.Message}");
+            }
+        }
+
+        [HttpGet]
+        [Route("RemoveDependency")]
+        public async Task<IActionResult> RemoveDependency(int DependencyID, int Enroll)
+        {
+            try
+            {
+                var msgParameter = new SqlParameter("@Msg", SqlDbType.VarChar, -1) { Direction = ParameterDirection.Output };
+                await _dbContext.Database.ExecuteSqlRawAsync(
+                    "EXEC sprRemoveTaskDependency @DependencyID, @Enroll, @Msg OUT",
+                    new SqlParameter("@DependencyID", DependencyID),
+                    new SqlParameter("@Enroll", Enroll),
+                    msgParameter
+                );
+                return new JsonResult(msgParameter.Value?.ToString());
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Database connection failed: {ex.Message}");
+            }
+        }
+
+        [HttpGet]
+        [Route("GetDependencies")]
+        public async Task<List<TaskDependency>> GetDependencies(int TaskID)
+        {
+            try
+            {
+                var commandText = $"EXEC sprGetTaskDependencies {TaskID}";
+                return _dbContext.TaskDependency.FromSqlRaw(commandText).ToList();
+            }
+            catch (Exception ex)
+            {
+                return null;
+            }
+        }
+
+        // ---- Teammate task visibility (any teammate's open tasks, for the Team Activity page --
+        // reuses the same proc Offboarding's admin-only tool uses, but exposed here with no role
+        // gate since peer visibility is for everyone, not just admins) ----
+        [HttpGet]
+        [Route("GetOpenTasksForUser")]
+        public async Task<List<OpenTask>> GetOpenTasksForUser(int UserID)
+        {
+            try
+            {
+                var commandText = $"EXEC sprGetOpenTasksByUser {UserID}";
+                return _dbContext.OpenTask.FromSqlRaw(commandText).ToList();
+            }
+            catch (Exception ex)
+            {
+                return null;
+            }
+        }
+
+        // ---- Labels ----
+        [HttpGet]
+        [Route("CreateLabel")]
+        public async Task<IActionResult> CreateLabel(string Name, string Color, int Enroll)
+        {
+            try
+            {
+                var msgParameter = new SqlParameter("@Msg", SqlDbType.VarChar, -1) { Direction = ParameterDirection.Output };
+                await _dbContext.Database.ExecuteSqlRawAsync(
+                    "EXEC sprCreateLabel @Name, @Color, @Enroll, @Msg OUT",
+                    new SqlParameter("@Name", Name),
+                    new SqlParameter("@Color", Color),
+                    new SqlParameter("@Enroll", Enroll),
+                    msgParameter
+                );
+                return new JsonResult(msgParameter.Value?.ToString());
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Database connection failed: {ex.Message}");
+            }
+        }
+
+        [HttpGet]
+        [Route("GetLabels")]
+        public async Task<List<TaskLabel>> GetLabels()
+        {
+            try
+            {
+                return _dbContext.TaskLabel.FromSqlRaw("EXEC sprGetLabels").ToList();
+            }
+            catch (Exception ex)
+            {
+                return null;
+            }
+        }
+
+        [HttpGet]
+        [Route("GetLabelsByTask")]
+        public async Task<List<TaskLabel>> GetLabelsByTask(int TaskID)
+        {
+            try
+            {
+                var commandText = $"EXEC sprGetLabelsByTask {TaskID}";
+                return _dbContext.TaskLabel.FromSqlRaw(commandText).ToList();
+            }
+            catch (Exception ex)
+            {
+                return null;
+            }
+        }
+
+        [HttpGet]
+        [Route("AssignLabel")]
+        public async Task<IActionResult> AssignLabel(int TaskID, int LabelID, int Enroll)
+        {
+            try
+            {
+                var msgParameter = new SqlParameter("@Msg", SqlDbType.VarChar, -1) { Direction = ParameterDirection.Output };
+                await _dbContext.Database.ExecuteSqlRawAsync(
+                    "EXEC sprAssignLabel @TaskID, @LabelID, @Enroll, @Msg OUT",
+                    new SqlParameter("@TaskID", TaskID),
+                    new SqlParameter("@LabelID", LabelID),
+                    new SqlParameter("@Enroll", Enroll),
+                    msgParameter
+                );
+                return new JsonResult(msgParameter.Value?.ToString());
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Database connection failed: {ex.Message}");
+            }
+        }
+
+        [HttpGet]
+        [Route("RemoveLabel")]
+        public async Task<IActionResult> RemoveLabel(int TaskID, int LabelID, int Enroll)
+        {
+            try
+            {
+                var msgParameter = new SqlParameter("@Msg", SqlDbType.VarChar, -1) { Direction = ParameterDirection.Output };
+                await _dbContext.Database.ExecuteSqlRawAsync(
+                    "EXEC sprRemoveLabel @TaskID, @LabelID, @Enroll, @Msg OUT",
+                    new SqlParameter("@TaskID", TaskID),
+                    new SqlParameter("@LabelID", LabelID),
+                    new SqlParameter("@Enroll", Enroll),
+                    msgParameter
+                );
+                return new JsonResult(msgParameter.Value?.ToString());
             }
             catch (Exception ex)
             {

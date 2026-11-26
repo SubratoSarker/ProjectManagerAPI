@@ -200,5 +200,131 @@ namespace ProjectManagerAPI.Controllers.Project
                 return StatusCode(500, $"Database connection failed: {ex.Message}");
             }
         }
+
+        [HttpGet]
+        [Route("BulkRequestAction")]
+        public async Task<IActionResult> BulkRequestAction([FromQuery] int[] RequestIDs, int Enroll, int Type)
+        {
+            // Same Type convention as RequestAction: 1 = Approve, 2 = Reject.
+            try
+            {
+                int successCount = 0;
+                var failures = new List<string>();
+                foreach (var requestId in RequestIDs)
+                {
+                    var msgParameter = new SqlParameter("@Msg", SqlDbType.VarChar, -1) { Direction = ParameterDirection.Output };
+                    await _dbContext.Database.ExecuteSqlRawAsync(
+                        "EXEC sprRequetAction @RequestID, @Enroll, @Type, @Msg OUT",
+                        new SqlParameter("@RequestID", requestId),
+                        new SqlParameter("@Enroll", Enroll),
+                        new SqlParameter("@Type", Type),
+                        msgParameter
+                    );
+                    var msg = msgParameter.Value?.ToString() ?? "";
+                    if (msg.Contains("Success")) { successCount++; }
+                    else { failures.Add($"Request {requestId}: {msg}"); }
+                }
+                return new JsonResult(new { successCount, total = RequestIDs.Length, failures });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Database connection failed: {ex.Message}");
+            }
+        }
+
+        [HttpGet]
+        [Route("CreateMilestone")]
+        public async Task<IActionResult> CreateMilestone(int ProjectID, string Name, DateOnly Date, int Enroll)
+        {
+            try
+            {
+                var msgParameter = new SqlParameter("@Msg", SqlDbType.VarChar, -1) { Direction = ParameterDirection.Output };
+                await _dbContext.Database.ExecuteSqlRawAsync(
+                    "EXEC sprCreateMilestone @ProjectID, @Name, @Date, @Enroll, @Msg OUT",
+                    new SqlParameter("@ProjectID", ProjectID),
+                    new SqlParameter("@Name", Name),
+                    new SqlParameter("@Date", Date),
+                    new SqlParameter("@Enroll", Enroll),
+                    msgParameter
+                );
+                return new JsonResult(msgParameter.Value?.ToString());
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Database connection failed: {ex.Message}");
+            }
+        }
+
+        [HttpGet]
+        [Route("GetMilestones")]
+        public async Task<List<Milestone>> GetMilestones(int ProjectID)
+        {
+            try
+            {
+                var commandText = $"EXEC sprGetMilestonesByProject {ProjectID}";
+                return _dbContext.Milestone.FromSqlRaw(commandText).ToList();
+            }
+            catch (Exception ex)
+            {
+                return null;
+            }
+        }
+
+        [HttpGet]
+        [Route("ToggleMilestone")]
+        public async Task<IActionResult> ToggleMilestone(int MilestoneID, int Enroll)
+        {
+            try
+            {
+                var msgParameter = new SqlParameter("@Msg", SqlDbType.VarChar, -1) { Direction = ParameterDirection.Output };
+                await _dbContext.Database.ExecuteSqlRawAsync(
+                    "EXEC sprToggleMilestone @MilestoneID, @Enroll, @Msg OUT",
+                    new SqlParameter("@MilestoneID", MilestoneID),
+                    new SqlParameter("@Enroll", Enroll),
+                    msgParameter
+                );
+                return new JsonResult(msgParameter.Value?.ToString());
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Database connection failed: {ex.Message}");
+            }
+        }
+
+        [HttpGet]
+        [Route("DeleteMilestone")]
+        public async Task<IActionResult> DeleteMilestone(int MilestoneID, int Enroll)
+        {
+            try
+            {
+                var msgParameter = new SqlParameter("@Msg", SqlDbType.VarChar, -1) { Direction = ParameterDirection.Output };
+                await _dbContext.Database.ExecuteSqlRawAsync(
+                    "EXEC sprDeleteMilestone @MilestoneID, @Enroll, @Msg OUT",
+                    new SqlParameter("@MilestoneID", MilestoneID),
+                    new SqlParameter("@Enroll", Enroll),
+                    msgParameter
+                );
+                return new JsonResult(msgParameter.Value?.ToString());
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Database connection failed: {ex.Message}");
+            }
+        }
+
+        [HttpGet]
+        [Route("GetTimeline")]
+        public async Task<List<TimelineTask>> GetTimeline(int ProjectID)
+        {
+            try
+            {
+                var commandText = $"EXEC sprGetProjectTimeline {ProjectID}";
+                return _dbContext.TimelineTask.FromSqlRaw(commandText).ToList();
+            }
+            catch (Exception ex)
+            {
+                return null;
+            }
+        }
     }
 }
